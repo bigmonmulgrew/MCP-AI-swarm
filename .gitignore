@@ -1,0 +1,7 @@
+# environment variables
+# see sample.env for defaults
+.env
+
+# Ignore downloaded Ollama models
+ollama-data/
+

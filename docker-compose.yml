@@ -1,0 +1,20 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-container
+    ports:
+      - "${OLLAMA_PORT_E:-11434}:${OLLAMA_PORT_I:-11434}"
+    volumes:
+      - ./ollama-data:/root/.ollama  # persistent storage
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia

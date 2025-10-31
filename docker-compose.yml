@@ -5,7 +5,7 @@ services:
     ports:
       - "${OLLAMA_PORT_E:-11434}:${OLLAMA_PORT_I:-11434}"
     volumes:
-      - ./ollama-data:/root/.ollama  # persistent storage
+      - ${OLLAMA_MODEL_STORAGE:-./ollama-data}:/var/lib/ollama
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
@@ -18,3 +18,18 @@ services:
               count: all
               capabilities: [gpu]
     runtime: nvidia
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: api-container
+    ports:
+      - "${API_PORT_E:-8080}:${API_PORT_I:-8080}"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      - ./api:/app   # live code mounting for dev
+    depends_on:
+      - ollama
+    restart: unless-stopped

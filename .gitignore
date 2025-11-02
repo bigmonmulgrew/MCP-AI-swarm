@@ -5,3 +5,9 @@
 # Ignore downloaded Ollama models
 ollama-data/
 
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdm

@@ -19,6 +19,19 @@ services:
               capabilities: [gpu]
     runtime: nvidia
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend-container
+    ports:
+      - "${FRONTEND_PORT_E:-5173}:${FRONTEND_PORT_I:-5173}"
+    environment:
+      - API_URL=http://${API_HOST:-api}:${API_PORT_I:-8080}
+    depends_on:
+      - api
+    restart: unless-stopped
+
   api:
     build:
       context: ./api
@@ -27,7 +40,7 @@ services:
     ports:
       - "${API_PORT_E:-8080}:${API_PORT_I:-8080}"
     environment:
-      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
     volumes:
       - ./api:/app   # live code mounting for dev
     depends_on:

@@ -28,6 +28,8 @@ services:
       - "${FRONTEND_PORT_E:-5173}:${FRONTEND_PORT_I:-5173}"
     environment:
       - API_URL=http://${API_HOST:-api}:${API_PORT_I:-8080}
+      - MCP_VISUALISER_URL=http://${MCP_VISUALISER_HOST:-mcp-visualiser}:${MCP_VISUALISER_PORT_I:-8070}
+      - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_I:-8060}
     depends_on:
       - api
     restart: unless-stopped
@@ -43,6 +45,37 @@ services:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
     volumes:
       - ./api:/app   # live code mounting for dev
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  mcp-visualiser:
+    build:
+      context: ./MCP-Visualiser
+      dockerfile: Dockerfile
+    container_name: mcp-visualiser-container
+    ports:
+      - "${MCP_VISUALISER_PORT_E:-8070}:${MCP_VISUALISER_PORT_I:-8070}"
+    environment:
+      - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_E:-8060}
+    volumes:
+      - ./MCP-Visualiser:/app    # live code mounting for dev
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  mcp-data:
+    build:
+      context: ./MCP-Data
+      dockerfile: Dockerfile
+    container_name: mcp-data-container
+    ports:
+      - "${MCP_DATA_PORT_E:-8060}:${MCP_DATA_PORT_I:-8060}"
+    environment:
+      - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+    volumes:
+      - ./MCP-Data:/app    # live code mounting for dev
     depends_on:
       - ollama
     restart: unless-stopped

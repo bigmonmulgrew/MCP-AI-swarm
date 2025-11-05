@@ -27,22 +27,22 @@ services:
     ports:
       - "${FRONTEND_PORT_E:-5173}:${FRONTEND_PORT_I:-5173}"
     environment:
-      - API_URL=http://${API_HOST:-api}:${API_PORT_I:-8080}
+      - API_URL=http://${MCPS_HOST:-mcps}:${MCPS_PORT_I:-8080}
     depends_on:
-      - api
+      - mcps
     restart: unless-stopped
 
-  api:
+  mcps:
     build:
-      context: ./api
+      context: ./mcps
       dockerfile: Dockerfile
-    container_name: api-container
+    container_name: mcps-container
     ports:
-      - "${API_PORT_E:-8080}:${API_PORT_I:-8080}"
+      - "${MCPS_PORT_E:-8080}:${MCPS_PORT_I:-8080}"
     environment:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
     volumes:
-      - ./api:/app   # live code mounting for dev
+      - ./api:/amcpspp   # live code mounting for dev
     depends_on:
       - ollama
     restart: unless-stopped

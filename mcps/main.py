@@ -14,7 +14,7 @@ class DroneOnlineObject(BaseModel):
     ToolServerAddress: str
     ToolServerPort: str
     ToolServerCategory: str
-    Timeout:300
+    Timeout:int
 
 app = FastAPI(title="Multi Cotext Protocol Server API is runnning")
 

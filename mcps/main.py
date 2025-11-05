@@ -9,13 +9,31 @@ class DroneQueryObject(BaseModel):
     MessageHistory: Dict[str, Any]
     CurrentTime: float
 
+class DroneOnlineObject(BaseModel):
+    ToolServerName: str
+    ToolServerAddress: str
+    ToolServerPort: str
+    ToolServerCategory: str
+    Timeout:300
 
-app = FastAPI(title="Multi Cotext Protocole Server API is runnning")
+app = FastAPI(title="Multi Cotext Protocol Server API is runnning")
 
 @app.get("/")
 def read_root():
-    return {"message": "Multi Cotext Protocole Server API is running"}
+    return {"message": "Multi Cotext Protocol Server API is running"}
 
 @app.get("/status")
 def status():
+    return {"status": "ok"}
+
+@app.get("/online")
+def setOnline():
+    return {"status": "ok"}
+
+@app.get("/offline")
+def setOffline():
+    return {"status: not implemented"}
+
+@app.get("/heartbeat")
+def heartbeatResponse():
     return {"status": "ok"}

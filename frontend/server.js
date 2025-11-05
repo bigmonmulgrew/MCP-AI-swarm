@@ -161,3 +161,8 @@ app.get("/call-query-data", async (req, res) => {
 app.listen(FRONTEND_PORT, "0.0.0.0", () => {
   console.log(`Frontend running on port ${FRONTEND_PORT}`);
 });
+
+process.on("SIGTERM", () => {
+  console.log("Frontend shutting down gracefully... NOT IMPLEMENTED");
+  process.exit(0);
+});

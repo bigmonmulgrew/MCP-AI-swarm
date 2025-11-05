@@ -18,4 +18,4 @@ ENV PORT=5173
 EXPOSE ${PORT}
 
 # Start the Node server
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

@@ -2,6 +2,7 @@
   "name": "mco-frontend",
   "version": "1.0.0",
   "description": "Simple Node.js frontend for MCO tool",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

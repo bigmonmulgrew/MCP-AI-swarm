@@ -4,6 +4,7 @@ from typing import Any, Dict
 from time import time
 import requests
 import os
+import bootstrap
 
 START_TIME = time()
 
@@ -46,7 +47,7 @@ async def handle_query(dqo: DroneQueryObject):
     
     return {
         "msg": "Created a graph and processed the request successfully.",
-        "images": [data_response],
+        "images": [bootstrap.IMAGE],
         "files": [],
         "videos": []
     }

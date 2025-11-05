@@ -59,6 +59,8 @@ services:
     environment:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
       - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_E:-8060}
+      - MCPS_HOST=${MCPS_HOST:-127.0.0.1}
+      - MCPS_PORT=${MCPS_PORT_I:-8080}
     volumes:
       - ./MCP-Visualiser:/app    # live code mounting for dev
     depends_on:
@@ -74,6 +76,8 @@ services:
       - "${MCP_DATA_PORT_E:-8060}:${MCP_DATA_PORT_I:-8060}"
     environment:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - MCPS_HOST=${MCPS_HOST:-127.0.0.1}
+      - MCPS_PORT=${MCPS_PORT_I:-8080}
     volumes:
       - ./MCP-Data:/app    # live code mounting for dev
     depends_on:

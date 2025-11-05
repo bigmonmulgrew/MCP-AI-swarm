@@ -44,7 +44,7 @@ services:
     environment:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
     volumes:
-      - ./api:/amcpspp   # live code mounting for dev
+      - ./mcps:/app   # live code mounting for dev
     depends_on:
       - ollama
     restart: unless-stopped

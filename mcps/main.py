@@ -1,10 +1,7 @@
 from fastapi import FastAPI
-from typing import Any, Dict
 from mco_common.structs import DroneOnlineObject, DroneQueryObject, UserQuery
 
 app = FastAPI(title="Multi Cotext Protocol Server API is runnning")
-
-
 
 @app.get("/")
 def read_root():
@@ -27,6 +24,7 @@ def set_online(data: DroneOnlineObject):
         "Timeout": 300
     }
     """
+    print(f"MCPS Received ONLINE notification: {data.ToolServerName}")
     # In production, you would register this drone in memory or database
     return {"status": "ok", "received": data.model_dump()}
 

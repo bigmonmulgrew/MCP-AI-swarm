@@ -19,7 +19,7 @@ class BaseDroneServer(ABC):
         self._register_status_endpoint()
 
         # Force subclass to register its /query endpoint
-        self._register_query_endpoint()
+        self._register_subclass_endpoints()
 
         # Start MCPS registration thread
         self._register_startup_event()
@@ -58,6 +58,6 @@ class BaseDroneServer(ABC):
             print(f"[MCO] {self.name} failed to register: {e}")
     
     @abstractmethod
-    def _register_query_endpoint(self):
+    def _register_subclass_endpoints(self):
         """Subclasses must define their own /query endpoint."""
         pass

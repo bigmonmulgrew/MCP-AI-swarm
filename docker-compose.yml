@@ -38,8 +38,8 @@ services:
 
   mcps:
     build:
-      context: ./mcps
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./mcps/Dockerfile
     container_name: mcps-container
     ports:
       - "${MCPS_PORT_E:-8080}:${MCPS_PORT_I:-8080}"

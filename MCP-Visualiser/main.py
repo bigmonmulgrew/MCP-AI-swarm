@@ -5,7 +5,7 @@ from time import time, sleep
 import requests
 import os
 import threading
-import bootstrap
+from common import BOOT_IMAGE
 
 START_TIME = time()
 
@@ -62,7 +62,7 @@ async def handle_query(dqo: DroneQueryObject):
     
     return {
         "msg": "Created a graph and processed the request successfully.",
-        "images": [bootstrap.IMAGE],
+        "images": [BOOT_IMAGE],
         "files": [],
         "videos": []
     }

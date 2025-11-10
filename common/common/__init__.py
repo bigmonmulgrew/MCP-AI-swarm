@@ -1,2 +1,2 @@
 from .structs import DroneOnlineObject, DroneQueryObject, UserQuery
-from .bootstrap import IMAGE
+from .bootstrap import BOOT_IMAGE

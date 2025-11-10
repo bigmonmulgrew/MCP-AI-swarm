@@ -55,8 +55,8 @@ services:
 
   mcp-visualiser:
     build:
-      context: ./MCP-Visualiser
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./MCP-Visualiser/Dockerfile
     container_name: mcp-visualiser-container
     ports:
       - "${MCP_VISUALISER_PORT_E:-8070}:${MCP_VISUALISER_PORT_I:-8070}"

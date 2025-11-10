@@ -12,6 +12,7 @@ RUN pip install /common
 # Copy the app itself
 COPY ./mcps /app
 RUN pip install -r requirements.txt
+
 # Expose port
 EXPOSE 8080
 

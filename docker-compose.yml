@@ -73,8 +73,8 @@ services:
 
   mcp-data:
     build:
-      context: ./MCP-Data
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./MCP-Data/Dockerfile
     container_name: mcp-data-container
     ports:
       - "${MCP_DATA_PORT_E:-8060}:${MCP_DATA_PORT_I:-8060}"

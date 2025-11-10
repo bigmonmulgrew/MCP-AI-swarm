@@ -1,10 +1,9 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import Any, Dict
 from time import time, sleep
 import threading
 import requests
 import os
+from common import DroneOnlineObject, DroneQueryObject
 
 START_TIME = time()
 
@@ -14,21 +13,6 @@ MCPS_PORT = os.getenv("MCPS_PORT_I", 8080)
 
 # Build full URL for the MCPS /online endpoint
 MCPS_ONLINE_URL = f"http://{MCPS_HOST}:{MCPS_PORT}/online"
-
-# === Define the Drone Query Object (DQO) ===
-class DroneQueryObject(BaseModel):
-    Query: str
-    RecursionDepth: int
-    OriginalSPrompt: str
-    MessageHistory: Dict[str, Any]
-    CurrentTime: float
-
-class DroneOnlineObject(BaseModel):
-    ToolServerName: str
-    ToolServerAddress: str
-    ToolServerPort: str
-    ToolServerCategory: str
-    Timeout:int
 
 # === Create the API app ===
 app = FastAPI(title="MCO Orchestration Server MVP")

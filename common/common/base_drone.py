@@ -1,4 +1,4 @@
-# mco_common/base_drone.py
+from abc import ABC, abstractmethod
 from fastapi import FastAPI
 from time import time, sleep
 import threading
@@ -6,7 +6,7 @@ import requests
 import os
 from common import DroneOnlineObject
 
-class BaseDroneServer:
+class BaseDroneServer(ABC):
     def __init__(self, name, category, env_host_key, env_port_key):
         self.name = name
         self.category = category
@@ -14,7 +14,14 @@ class BaseDroneServer:
         self.env_port_key = env_port_key
         self.start_time = time()
         self.app = FastAPI(title=f"{self.name} API")
+        
+        # Register required endpoints
         self._register_status_endpoint()
+
+        # Force subclass to register its /query endpoint
+        self._register_query_endpoint()
+
+        # Start MCPS registration thread
         self._register_startup_event()
 
     def _register_status_endpoint(self):
@@ -49,3 +56,8 @@ class BaseDroneServer:
             print(f"[MCO] {self.name} registered successfully: {res.json()}")
         except requests.exceptions.RequestException as e:
             print(f"[MCO] {self.name} failed to register: {e}")
+    
+    @abstractmethod
+    def _register_query_endpoint(self):
+        """Subclasses must define their own /query endpoint."""
+        pass

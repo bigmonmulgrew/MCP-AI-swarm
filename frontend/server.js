@@ -37,7 +37,19 @@ app.get("/call-query", async (req, res) => {
       Query: "status check from frontend",
       RecursionDepth: 1,
       OriginalSPrompt: "initial prompt",
-      MessageHistory: { step1: "ok" },
+      MessageHistory: {
+        step1: {
+          role: "system", // or "user" / "assistant"
+          Msg: "System online",
+          stucturedMsg: ["SystemCheck"],
+          Images: [],
+          Files: [],
+          Videos: []
+        },
+        step2: {
+          Hostname: ["visualiser-drone", "mcps"]
+        }
+      },
       CurrentTime: Date.now() / 1000
     };
     const { data } = await axios.post(`${MCP_VISUALISER_URL}/query`, payload);
@@ -53,7 +65,19 @@ app.get("/call-query-data", async (req, res) => {
       Query: "status check from frontend",
       RecursionDepth: 1,
       OriginalSPrompt: "initial prompt",
-      MessageHistory: { step1: "ok" },
+      MessageHistory: {
+        step1: {
+          role: "system", // or "user" / "assistant"
+          Msg: "System online",
+          stucturedMsg: ["SystemCheck"],
+          Images: [],
+          Files: [],
+          Videos: []
+        },
+        step2: {
+          Hostname: ["visualiser-drone", "mcps"]
+        }
+      },
       CurrentTime: Date.now() / 1000
     };
     const { data } = await axios.post(`${MCP_DATA_URL}/query`, payload);

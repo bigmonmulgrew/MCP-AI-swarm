@@ -1,11 +1,22 @@
 from pydantic import BaseModel, Field
-from typing import Any, Dict
+from typing import Any, Dict, List
+
+class SenderHistory(BaseModel):
+    Hostname: List[str] # For debugging, allows a trace route of MCP drones
+
+class Message(BaseModel):
+    role: str           # Message sender type
+    Msg: str            # Tha actual message
+    stucturedMsg: List[str] # Structured data strings
+    Images: List[str]   # base64-encoded strings
+    Files: List[str]    # could be filenames, URLs, or base64 strings
+    Videos: List[str]   # same — filenames, URLs, or encoded data
 
 class DroneQueryObject(BaseModel):
     Query: str
     RecursionDepth: int
     OriginalSPrompt: str
-    MessageHistory: Dict[str, Any]
+    MessageHistory: Dict[str, {SenderHistory, Message}]
     CurrentTime: float
 
 class DroneOnlineObject(BaseModel):

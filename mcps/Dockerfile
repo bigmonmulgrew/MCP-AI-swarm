@@ -4,14 +4,14 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Copy requirement list first (for better caching)
-COPY requirements.txt .
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy common package and install it
+COPY ./common /common
+RUN pip install /common
 
-# Copy source code
-COPY . .
+# Copy the app itself
+COPY ./mcps /app
+RUN pip install -r requirements.txt
 
 # Expose port
 EXPOSE 8080

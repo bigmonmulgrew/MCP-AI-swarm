@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from mco_common.structs import DroneOnlineObject, DroneQueryObject, UserQuery
+from common import DroneOnlineObject, DroneQueryObject, UserQuery
 import requests
 import os
 from time import time

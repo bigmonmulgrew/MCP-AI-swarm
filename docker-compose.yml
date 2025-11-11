@@ -38,8 +38,8 @@ services:
 
   mcps:
     build:
-      context: ./mcps
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./mcps/Dockerfile
     container_name: mcps-container
     ports:
       - "${MCPS_PORT_E:-8080}:${MCPS_PORT_I:-8080}"
@@ -55,8 +55,8 @@ services:
 
   mcp-visualiser:
     build:
-      context: ./MCP-Visualiser
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./MCP-Visualiser/Dockerfile
     container_name: mcp-visualiser-container
     ports:
       - "${MCP_VISUALISER_PORT_E:-8070}:${MCP_VISUALISER_PORT_I:-8070}"
@@ -73,8 +73,8 @@ services:
 
   mcp-data:
     build:
-      context: ./MCP-Data
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./MCP-Data/Dockerfile
     container_name: mcp-data-container
     ports:
       - "${MCP_DATA_PORT_E:-8060}:${MCP_DATA_PORT_I:-8060}"

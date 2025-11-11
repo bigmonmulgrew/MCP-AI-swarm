@@ -6,13 +6,11 @@ control Orc MCP
 
 entity Data MCP
 
-entity Visualisation MCP
-
 database Database
 
 entity Ollama
  
-Interface->Orc MCP: Send query (e.g. from BlocHub)
+Interface->Orc MCP: Event fires (camera state change)
 
  
 
@@ -24,41 +22,45 @@ Orc MCP->Data MCP:Give me ternary data
 
     activate Database
   deactivate Data MCP
-    Data MCP<-Database:Send unstructured data
+    Data MCP<-Database:Send unstructured data (law and maintenance)
   activate Data MCP
     deactivate Database
 
   Data MCP->Ollama:Extract information from unstructured data
   deactivate Data MCP
     activate Ollama
-    abox over Ollama: Figure out the threshold (R/A/G)
-    abox over Ollama: Figure out the timeframes
-    Data MCP<-Ollama:Give back structured data
+    abox over Ollama: Figure out the queries(R/A)
+    Data MCP<-Ollama:Give back structured queries
     deactivate Ollama
 
   activate Data MCP
-  Data MCP->Database:Retrieve some structured data derived from new structured data (timeframe data)
+  Data MCP->Database:Run the RED query
 
     activate Database
 deactivate Data MCP
     Data MCP<-Database:Returns the queried data
     deactivate Database
 activate Data MCP
-  abox over Data MCP: Filter for OFF state
-  abox over Data MCP: Compare OFF count against threshold
-  abox over Data MCP: Create ternary categorisation
-  Data MCP->Visualisation MCP:Send filtered data
+  abox over Data MCP: Check for RED state
+alt State is RED
+Orc MCP<-Data MCP:Return RED state
+activate Orc MCP
+else State is AMBER
+Data MCP->Database:Run the AMBER query
+activate Database
+Data MCP<-Database:Returns the queried data
+deactivate Database
+  abox over Data MCP: Check for AMBER state
+
+Orc MCP<-Data MCP:Return AMBER state
 
   
 deactivate Data MCP
-activate Visualisation MCP
-  Data MCP<-Visualisation MCP:Send visualisations 
-activate Data MCP
-deactivate Visualisation MCP
-  Orc MCP<-Data MCP:Send all information
+else State is Green
+  Orc MCP<-Data MCP:Return GREEN state
   deactivate Data MCP
-  deactivate Data MCP
+end
   
-  activate Orc MCP
+  
   Interface<-Orc MCP:Return message
   deactivate Orc MCP

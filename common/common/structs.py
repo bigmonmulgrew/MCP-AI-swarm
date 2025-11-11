@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Union
 
 class SenderHistory(BaseModel):
     Hostname: List[str] # For debugging, allows a trace route of MCP drones
@@ -16,7 +16,7 @@ class DroneQueryObject(BaseModel):
     Query: str
     RecursionDepth: int
     OriginalSPrompt: str
-    MessageHistory: Dict[str, {SenderHistory, Message}]
+    MessageHistory: Dict[str, Union[SenderHistory, Message]]
     CurrentTime: float
 
 class DroneOnlineObject(BaseModel):

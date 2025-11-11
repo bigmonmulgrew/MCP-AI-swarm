@@ -16,13 +16,13 @@ class DroneOnlineObject(BaseModel):
     Timeout:int
 
 class Message(BaseModel):
+    role: str           # Message sender type
     Msg: str
     Images: List[str]   # base64-encoded strings
     Files: List[str]    # could be filenames, URLs, or base64 strings
     Videos: List[str]   # same — filenames, URLs, or encoded data
     
 class MessageHistory(BaseModel):
-    Entity: str
     MessageObject: Message
     SenderHostname: List[str]
     

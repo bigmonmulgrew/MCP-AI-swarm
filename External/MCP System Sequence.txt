@@ -1,0 +1,64 @@
+title MCP System
+ 
+participant Interface
+
+control Orc MCP
+
+entity Data MCP
+
+entity Visualisation MCP
+
+database Database
+
+entity Ollama
+ 
+Interface->Orc MCP: Send query (e.g. from BlocHub)
+
+ 
+
+Orc MCP->Data MCP:Give me ternary data
+  activate Data MCP
+  activate Data MCP
+
+  Data MCP->Database:Give me relevant data to the query
+
+    activate Database
+  deactivate Data MCP
+    Data MCP<-Database:Send unstructured data
+  activate Data MCP
+    deactivate Database
+
+  Data MCP->Ollama:Extract information from unstructured data
+  deactivate Data MCP
+    activate Ollama
+    abox over Ollama: Figure out the threshold (R/A/G)
+    abox over Ollama: Figure out the timeframes
+    Data MCP<-Ollama:Give back structured data
+    deactivate Ollama
+
+  activate Data MCP
+  Data MCP->Database:Retrieve some structured data derived from new structured data (timeframe data)
+
+    activate Database
+deactivate Data MCP
+    Data MCP<-Database:Returns the queried data
+    deactivate Database
+activate Data MCP
+  abox over Data MCP: Filter for OFF state
+  abox over Data MCP: Compare OFF count against threshold
+  abox over Data MCP: Create ternary categorisation
+  Data MCP->Visualisation MCP:Send filtered data
+
+  
+deactivate Data MCP
+activate Visualisation MCP
+  Data MCP<-Visualisation MCP:Send visualisations 
+activate Data MCP
+deactivate Visualisation MCP
+  Orc MCP<-Data MCP:Send all information
+  deactivate Data MCP
+  deactivate Data MCP
+  
+  activate Orc MCP
+  Interface<-Orc MCP:Return message
+  deactivate Orc MCP

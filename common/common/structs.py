@@ -2,11 +2,11 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List
 
 class SenderHistory(BaseModel):
-    Hostname: List[str]
+    Hostname: List[str] # For debugging, allows a trace route of MCP drones
 
 class Message(BaseModel):
     role: str           # Message sender type
-    Msg: str
+    Msg: str            # Tha actual message
     Images: List[str]   # base64-encoded strings
     Files: List[str]    # could be filenames, URLs, or base64 strings
     Videos: List[str]   # same — filenames, URLs, or encoded data

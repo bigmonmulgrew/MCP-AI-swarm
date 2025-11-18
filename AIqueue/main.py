@@ -36,7 +36,6 @@ async def ai_worker():
 
         queue.task_done()
 
-
 # --------------------------------------------------
 # Ollama Call (wrapped as async)
 # --------------------------------------------------
@@ -93,3 +92,25 @@ async def enqueue_ai_job(data: AIQuery):
     # Wait for worker to resolve the future
     result = await future
     return result
+
+async def debug_test():
+    job1 = AIQuery(
+        prompt="Hello how are you today",
+        model="phi4"
+    )
+    job2 = AIQuery(
+        prompt="Show me a small maths sum suitable for primary children.",
+        model="phi4"
+    )
+    result1 = enqueue_ai_job(job1)
+    result2 = enqueue_ai_job(job2)
+    
+    await result1
+    await result2
+    
+    print(result1)
+    print(result2)
+
+if __name__ == '__main__':
+    debug_test()
+    

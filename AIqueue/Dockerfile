@@ -12,5 +12,7 @@ RUN pip install /common
 COPY ./AIqueue /app
 RUN pip install -r requirements.txt
 
+EXPOSE 9090
+
 # Run FastAPI with Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9090"]

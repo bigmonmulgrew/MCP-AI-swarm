@@ -7,6 +7,9 @@ from time import time
 
 app = FastAPI(title="Multi Cotext Protocol Server API is runnning")
 
+# AI queue connection info
+AI_QUEUE_URL = os.getenv("AI_QUEUE_URL", "http://ai-queue:9090")
+
 # === Environment variables === TODO temporary
 MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
 MCP_VISUALISER_URL = os.getenv("MCP_VISUALISER_URL", "http://mcp-visualiser:8070")
@@ -46,7 +49,8 @@ def heartbeatResponse():
 
 @app.post("/query")
 def process_user_query(data: UserQuery):
-    
+    """Endpoint for the user query or a hard coded system query.
+    e.g. What are my risks?"""
     response_data = {
         "status": 200,
         "query": "user asked something",
@@ -63,6 +67,20 @@ def process_user_query(data: UserQuery):
     
     return response_data
 
+@app.post("/ai-query")
+def process_ai_query(data: dict):
+    """
+    Explicit endpoint for intentional AI requests.
+    """
+    try:
+        res = requests.post(f"{AI_QUEUE_URL}/query", json=data)
+        res.raise_for_status()
+        return res.json()
+    except requests.exceptions.RequestException as e:
+        return {"error": "AI queue unreachable", "details": str(e)}
+
+
+# TODO debugging only after here. Used in dev and planned ot be removed
 @app.post("/query-stack")
 def process_user_query_stack(data: UserQuery):
     """Orchestrates user queries by calling both data and visualiser drones."""

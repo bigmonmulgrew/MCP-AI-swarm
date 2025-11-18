@@ -51,7 +51,7 @@ class BaseDroneServer(ABC):
 
         print(f"[MCO] Registering {self.name} with MCPS at {MCPS_ONLINE_URL}...")
         try:
-            res = requests.post(MCPS_ONLINE_URL, json=drone_info.model_dump())
+            res = requests.post(MCPS_ONLINE_URL, json=drone_info.model_dump(mode = "json"))
             res.raise_for_status()
             print(f"[MCO] {self.name} registered successfully: {res.json()}")
         except requests.exceptions.RequestException as e:

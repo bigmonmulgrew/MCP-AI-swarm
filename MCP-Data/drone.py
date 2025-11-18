@@ -7,8 +7,9 @@ class DataDrone(BaseDroneServer):
             print(f"Received query: {dqo.Query}")
             
             payload = Message(
-                role = "bot"   ,        # Message sender type
-                Msg = "Structured Data",            # Tha actual message
-                stucturedMsg =  {"dsadsa", "dsadsa" }# Structured data strings
+                role = "bot"   ,                        # Message sender type
+                Msg = "Structured \{\{I1}} Data",       # The actual message  # {{I1}} token for image replacement example only, no defined format yet
+                Images= ["dsadas"],
+                stucturedMsg =  {"dsadsa", "dsadsa" }   # Structured data strings
             )
             return payload

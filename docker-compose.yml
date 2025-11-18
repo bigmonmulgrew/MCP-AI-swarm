@@ -19,6 +19,21 @@ services:
               capabilities: [gpu]
     runtime: nvidia
 
+  aiqueue:
+    build:
+      context: .
+      dockerfile: ./AIqueue/Dockerfile
+    container_name: ai-queue
+    ports:
+      - "${AI_QUEUE_PORT_E:-9090}:${AI_QUEUE_PORT_I:-9090}"
+    environment:
+      - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+    volumes:
+      - ./AIqueue:/app   # live code mounting for dev
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
@@ -45,12 +60,13 @@ services:
       - "${MCPS_PORT_E:-8080}:${MCPS_PORT_I:-8080}"
     environment:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - AI_QUEUE_URL=http://${AI_QUEUE_HOST:-ai-queue}:${AI_QUEUE_PORT_E:-9090}
       - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_E:-8060}
       - MCP_VISUALISER_URL=http://${MCP_VISUALISER_HOST:-mcp-data}:${MCP_VISUALISER_PORT_E:-8060}
     volumes:
       - ./mcps:/app   # live code mounting for dev
     depends_on:
-      - ollama
+      - aiqueue
     restart: unless-stopped
 
   mcp-visualiser:

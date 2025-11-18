@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from common import DroneOnlineObject, DroneQueryObject, UserQuery
+from common import DroneOnlineObject, DroneQueryObject, UserQuery   # Used items from common
+from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                        # Bootstrapping placeholders to be removes
 import requests
 import os
 from time import time
@@ -33,7 +34,7 @@ def set_online(data: DroneOnlineObject):
     """
     print(f"MCPS Received ONLINE notification: {data.ToolServerName}")
     # In production, you would register this drone in memory or database
-    return {"status": "ok", "received": data.model_dump()}
+    return ONLINE_RESPONSE
 
 @app.get("/offline")
 def setOffline():

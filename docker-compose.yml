@@ -28,6 +28,9 @@ services:
       - "${AI_QUEUE_PORT_E:-9090}:${AI_QUEUE_PORT_I:-9090}"
     environment:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - OLLAMA_DEFAULT_MODEL="${OLLAMA_DEFAULT_MODEL:-llama3.2}"
+      - AI_MAX_CONCURRENT="${AI_MAX_CONCURRENT:-1}"
+
     volumes:
       - ./AIqueue:/app   # live code mounting for dev
     depends_on:

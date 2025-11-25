@@ -87,3 +87,18 @@ services:
     depends_on:
       - ollama
     restart: unless-stopped
+
+  mcp-verdict:
+    build:
+      context: .
+      dockerfile: ./MCP-verdict/Dockerfile
+    container_name: mcp-verdict-container
+    ports:
+      - "${MCP_DATA_PORT_E:-8050}:${MCP_DATA_PORT_I:-8050}"
+    environment:
+      - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - MCPS_HOST=${MCPS_HOST:-127.0.0.1}
+      - MCPS_PORT=${MCPS_PORT_I:-8080}
+    volumes:
+      - ./MCP-verdict:/app    # live code mounting for dev
+    restart: unless-stopped

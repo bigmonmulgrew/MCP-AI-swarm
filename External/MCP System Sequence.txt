@@ -1,0 +1,66 @@
+title MCP System
+ 
+participant Interface
+
+control Orc MCP
+
+entity Data MCP
+
+database Database
+
+entity Ollama
+ 
+Interface->Orc MCP: Event fires (camera state change)
+
+ 
+
+Orc MCP->Data MCP:Give me ternary data
+  activate Data MCP
+  activate Data MCP
+
+  Data MCP->Database:Give me relevant data to the query
+
+    activate Database
+  deactivate Data MCP
+    Data MCP<-Database:Send unstructured data (law and maintenance)
+  activate Data MCP
+    deactivate Database
+
+  Data MCP->Ollama:Extract information from unstructured data
+  deactivate Data MCP
+    activate Ollama
+    abox over Ollama: Figure out the queries(R/A)
+    Data MCP<-Ollama:Give back structured queries
+    deactivate Ollama
+
+  activate Data MCP
+  Data MCP->Database:Run the RED query
+
+    activate Database
+deactivate Data MCP
+    Data MCP<-Database:Returns the queried data
+    deactivate Database
+activate Data MCP
+  abox over Data MCP: Check for RED state
+alt State is RED
+Orc MCP<-Data MCP:Return RED state
+activate Orc MCP
+else State is AMBER
+Data MCP->Database:Run the AMBER query
+activate Database
+Data MCP<-Database:Returns the queried data
+deactivate Database
+  abox over Data MCP: Check for AMBER state
+
+Orc MCP<-Data MCP:Return AMBER state
+
+  
+deactivate Data MCP
+else State is Green
+  Orc MCP<-Data MCP:Return GREEN state
+  deactivate Data MCP
+end
+  
+  
+  Interface<-Orc MCP:Return message
+  deactivate Orc MCP

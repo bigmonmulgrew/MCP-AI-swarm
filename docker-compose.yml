@@ -5,7 +5,7 @@ services:
     ports:
       - "${OLLAMA_PORT_E:-11434}:${OLLAMA_PORT_I:-11434}"
     volumes:
-      - ${OLLAMA_MODEL_STORAGE:-./ollama-data}:/var/lib/ollama
+      - ${OLLAMA_MODEL_STORAGE:-./ollama_models}:/root/.ollama
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility

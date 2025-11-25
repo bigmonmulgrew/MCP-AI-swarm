@@ -87,3 +87,4 @@ services:
     depends_on:
       - ollama
     restart: unless-stopped
+

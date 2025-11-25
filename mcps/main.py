@@ -33,7 +33,7 @@ def set_online(data: DroneOnlineObject):
     """
     print(f"MCPS Received ONLINE notification: {data.ToolServerName}")
     # In production, you would register this drone in memory or database
-    return {"status": "ok", "received": data.model_dump()}
+    return {"status": "ok", "received": data.model_dump(mode = "json")}
 
 @app.get("/offline")
 def setOffline():
@@ -77,15 +77,17 @@ def process_user_query_stack(data: UserQuery):
     )
 
     msg = "No response from Data Drone"
+    structured_msgs = []
     images = []
 
     # === Call Data MCP ===
     try:
         print(f"[MCPS] Calling Data MCP: {MCP_DATA_URL}/query")
-        res_data = requests.post(f"{MCP_DATA_URL}/query", json=dqo.model_dump())
+        res_data = requests.post(f"{MCP_DATA_URL}/query", json=dqo.model_dump(mode = "json"))
         res_data.raise_for_status()
         data_json = res_data.json()
-        msg = data_json.get("msg", msg)
+        msg = data_json.get("Msg", msg)
+        structured_msgs = data_json.get("stucturedMsg", [])
         print(f"[MCPS] Data MCP responded with msg: {msg}")
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Data MCP: {e}")
@@ -93,7 +95,7 @@ def process_user_query_stack(data: UserQuery):
     # === Call Visualiser MCP ===
     try:
         print(f"[MCPS] Calling Visualiser MCP: {MCP_VISUALISER_URL}/query")
-        res_vis = requests.post(f"{MCP_VISUALISER_URL}/query", json=dqo.model_dump())
+        res_vis = requests.post(f"{MCP_VISUALISER_URL}/query", json=dqo.model_dump(mode = "json"))
         res_vis.raise_for_status()
         vis_json = res_vis.json()
         images = vis_json.get("images", [])
@@ -109,6 +111,7 @@ def process_user_query_stack(data: UserQuery):
         "results": [
             {
                 "message": msg,
+                "structured_messages": structured_msgs,
                 "images": images,
                 "files": [],
                 "videos": []

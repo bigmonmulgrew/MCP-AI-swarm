@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from common import DroneOnlineObject, DroneQueryObject, UserQuery   # Used items from common
+from common import DroneOnlineObject, DroneQueryObject, UserQuery, Message   # Used items from common
 from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                        # Bootstrapping placeholders to be removes
 import requests
 import os
@@ -107,7 +107,7 @@ def process_user_query_stack(data: UserQuery):
         res_data.raise_for_status()
         data_json = res_data.json()
         msg = data_json.get("Msg", msg)
-        structured_msgs = data_json.get("stucturedMsg", [])
+        structured_msgs = data_json.get("structuredMsg", [])
         print(f"[MCPS] Data MCP responded with msg: {msg}")
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Data MCP: {e}")
@@ -158,9 +158,11 @@ def debug_verdict(data: UserQuery):
         res_data.raise_for_status()
         data_json = res_data.json()
 
+        
+
         # Inject response back into dqo for further processing
         dqo.MessageHistory = {
-            "data_drone_response": data_json["structuredMsg"]
+            "data_drone_response": data_json
         }
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Data MCP: {e}")
@@ -170,7 +172,8 @@ def debug_verdict(data: UserQuery):
         res_verdict = requests.post(f"{MCP_VERDICT_URL}/query", json=dqo.model_dump(mode = "json"))
         res_verdict.raise_for_status()
         verdict_json = res_verdict.json()
-        return verdict_json
+        dqo.MessageHistory["verdict_drone_response"] = verdict_json
+        return dqo
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Verdict Drone: {e}")
         return {"error": "Verdict Drone unreachable"}

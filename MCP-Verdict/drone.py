@@ -7,6 +7,11 @@ class VerdictDrone(BaseDroneServer):
         async def handle_query(dqo: DroneQueryObject):
 
             print(f"Received query: {dqo.Query}")
+
+            data = dqo.MessageHistory.get("data_drone_response", {})
+            
+            for camera in data.structuredMsg:
+                print(f"Camera Data: {camera}")
             
             payload = Message(
                 role = "bot"   ,                            # Message sender type

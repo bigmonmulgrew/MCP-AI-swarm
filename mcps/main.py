@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from common import DroneOnlineObject, DroneQueryObject, UserQuery   # Used items from common
+from common import DroneOnlineObject, DroneQueryObject, UserQuery, BlocHubResponse   # Used items from common
 from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                        # Bootstrapping placeholders to be removes
 from common import BOOT_BLOC_HUB_RESPONSE, BOOT_QUERY_RESPOSNE_01
 import requests
@@ -58,13 +58,27 @@ def process_user_query(data: UserQuery):
     
     return response_data
 
-@app.post("/bloc-query")
-def process_bloc_query(verbose: bool):
-    """ Tailored endpoint for testing Bloc's use case. No query data object required.
-    Returns a BlocHubResponse object. When verbose = true also includes reasoning data in JSON"""
+@app.get("/bloc-query")
+def process_bloc_query_get(verbose: bool = False):
+    """Tailored endpoint for testing Bloc's use case.
+    Returns a BlocHubResponse object. When verbose = true also includes reasoning data
+    """
+    boot_response = BlocHubResponse(**BOOT_BLOC_HUB_RESPONSE)
 
-    response_data = BOOT_BLOC_HUB_RESPONSE
-    
+    if verbose:
+        response_data = BlocHubResponse(
+            light_result = boot_response.light_result,
+            text_result = boot_response.text_result,
+            time = boot_response.time,
+            debug_data = boot_response.debug_data
+        )
+    else:
+        response_data = BlocHubResponse(
+            light_result = boot_response.light_result,
+            text_result = boot_response.text_result,
+            time = boot_response.time
+        )
+
     return response_data
 
 @app.post("/ai-query")

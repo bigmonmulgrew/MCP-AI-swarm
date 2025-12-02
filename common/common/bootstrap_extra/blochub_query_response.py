@@ -1,10 +1,8 @@
-from structs import BlocHubResponse
-
-bloc_response = BlocHubResponse(
-        light_result=1,
-        text_result="Medium risk, please check cameras and maintainance requirments",
-        time=1764688437,
-        debug_data={
+bloc_response = {
+        "light_result":1,
+        "text_result":"Medium risk, please check cameras and maintainance requirments",
+        "time":1764688437,
+        "debug_data":{
             "domain_summary": {
                 "summary": "Dont break the law",
                 "focus_points":[
@@ -25,8 +23,8 @@ bloc_response = BlocHubResponse(
                 "summary": "Camera 1 has been down for panned maintainance 5 times this week, Camera 2 has been down for unplanned maintaninace once",
                 "focus_points":[
                     "Cam 2 downtime was 35 min",
-                    "Cam 1 part of a testing programme"
-                ]
+                    "Cam 1 part of a testing programme",
+                ],
             }
-        }
-    )
+        },
+}

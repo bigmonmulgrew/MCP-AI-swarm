@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Union
+from typing import Optional, Any, Dict, List, Union
 
 class SenderHistory(BaseModel):
     Hostname: List[str] # For debugging, allows a trace route of MCP drones
@@ -69,6 +69,7 @@ class BlocHubResponse(BaseModel):
     time: int = Field(
         description="The generation time of the response in UTC"
     )
-    debug_data: str = Field(
-        description="A JSON data structure containing summaries of data used in reasoning. Only provided when verbose = true"
+    debug_data: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Data used in reasoning. Only provided when verbose=true"
     )

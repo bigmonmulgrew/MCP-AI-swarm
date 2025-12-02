@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from common import DroneOnlineObject, DroneQueryObject, UserQuery   # Used items from common
 from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                        # Bootstrapping placeholders to be removes
+from common import BOOT_BLOC_HUB_RESPONSE, BOOT_QUERY_RESPOSNE_01
 import requests
 import os
 from time import time
@@ -51,19 +52,9 @@ def heartbeatResponse():
 def process_user_query(data: UserQuery):
     """Endpoint for the user query or a hard coded system query.
     e.g. What are my risks?"""
-    response_data = {
-        "status": 200,
-        "query": "user asked something",
-        "chat_name": "sample chat name",
-        "results": [
-            {
-                "message": "sample message response",
-                "images": [],
-                "files": [],
-                "videos":[]
-            }
-        ],
-    }
+
+    #response_data = BOOT_QUERY_RESPOSNE_01
+    response_data = BOOT_BLOC_HUB_RESPONSE
     
     return response_data
 

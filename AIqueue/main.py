@@ -48,6 +48,7 @@ async def call_ollama(query: AIQuery):
         payload = {
             "model": query.model,
             "prompt": query.prompt,
+            "stream": False, 
             "options": query.options
         }
         res = requests.post(f"{OLLAMA_URL}/api/generate", json=payload, stream=False)
@@ -93,24 +94,65 @@ async def enqueue_ai_job(data: AIQuery):
     result = await future
     return result
 
-async def debug_test():
-    job1 = AIQuery(
-        prompt="Hello how are you today",
-        model="phi4"
-    )
-    job2 = AIQuery(
-        prompt="Show me a small maths sum suitable for primary children.",
-        model="phi4"
-    )
-    result1 = enqueue_ai_job(job1)
-    result2 = enqueue_ai_job(job2)
+# ==========================================================
+# Local Debug Test (when running python main.py directly)
+# ==========================================================
+if __name__ == "__main__":
+    import asyncio
     
-    await result1
-    await result2
-    
-    print(result1)
-    print(result2)
+    from config import OLLAMA_DEBUG_URL
 
-if __name__ == '__main__':
-    debug_test()
-    
+    # Override environment value for local testing
+    global OLLAMA_URL
+    OLLAMA_URL = OLLAMA_DEBUG_URL
+    print(f"[AIQ] Using DEBUG OLLAMA URL: {OLLAMA_URL}")
+
+    async def debug_test():
+        
+        
+        print("\n[AIQ] Running local debug test...\n")
+
+        # Start the worker manually (FastAPI normally does this)
+        asyncio.create_task(ai_worker())
+
+        # Give the worker a moment to start
+        await asyncio.sleep(0.2)
+
+        # Create two jobs
+        job1 = AIQuery(
+            prompt="Hello, how are you today?",
+            model="phi4"
+        )
+        job2 = AIQuery(
+            prompt="Give me a small maths sum for a primary school child.",
+            model="phi4"
+        )
+
+        # Get event loop
+        loop = asyncio.get_event_loop()
+
+        # Create futures manually
+        future1 = loop.create_future()
+        future2 = loop.create_future()
+
+        # Create job IDs
+        job_id1 = str(uuid.uuid4())
+        job_id2 = str(uuid.uuid4())
+
+        # Enqueue jobs exactly like API would
+        await queue.put((job_id1, job1, future1))
+        print(f"[TEST] Queued job {job_id1}")
+
+        await queue.put((job_id2, job2, future2))
+        print(f"[TEST] Queued job {job_id2}")
+
+        # Await their completion
+        result1 = await future1
+        result2 = await future2
+
+        print("\n==================== RESULTS ====================")
+        print(f"Job {job_id1}: {result1}\n")
+        print(f"Job {job_id2}: {result2}\n")
+        print("================================================\n")
+
+    asyncio.run(debug_test())

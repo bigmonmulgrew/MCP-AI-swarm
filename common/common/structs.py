@@ -58,4 +58,8 @@ class AIQuery(BaseModel):
     max_tokens: int = Field(
         10000, description="Token limit for the AI model. Can be used to help truncate messages or long requests"
     )
-    
+
+class BlocHubResponse(BaseModel):
+    result: str = Field(
+        description="The final result to send to bloc hub formatted as a json string."
+    )

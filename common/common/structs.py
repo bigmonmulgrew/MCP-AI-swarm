@@ -66,7 +66,7 @@ class BlocHubResponse(BaseModel):
     text_result: str = Field(
         description="Short advisory text sumamrising the results"
     )
-    time: float = Field(
+    time: int = Field(
         description="The generation time of the response in UTC"
     )
     debug_data: str = Field(

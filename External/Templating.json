@@ -1,0 +1,36 @@
+{
+    "_id": "68f1f2891291222c1367e675",
+    "created": "17/10/2025",
+    "datasource": "68f1f2511291222c1367e66c",
+    "group": "67c95459bd679456b91c8d69",
+    "index": "68f1f2891291222c1367e674",
+    "name": "G-XWBM",
+    "variables": [
+        {
+            "dtype": "timestamp",
+            "format": "%Y-%m-%dT%H:%M:%SZ",
+            "id": "68f1f2891291222c1367e674",
+            "index": true,
+            "label": "timestamp",
+            "name": "timestamp",
+            "units": ""
+        },
+        {
+            "dtype": "bool",
+            "id": "68f1f2891291222c1367e672",
+            "index": false,
+            "label": "cam_a",
+            "name": "cam_a",
+            "units": ""
+        },
+        {
+            "dtype": "bool",
+            "id": "68f1f2891291222c1367e673",
+            "index": false,
+            "label": "cam_b",
+            "name": "cam_b",
+            "units": ""
+        }
+        
+    ]
+}

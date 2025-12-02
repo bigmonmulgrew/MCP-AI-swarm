@@ -11,7 +11,6 @@ class DataDrone(BaseDroneServer):
                 Msg = "Structured \{\{I1}} Data",           # The actual message  # {{I1}} token for image replacement example only, no defined format yet
                 Images= ["dsadas"],
                 stucturedMsg =  [camera_data, local_data],  # Structured data strings
-                Images = [],
                 Files = [],
                 Videos = []
             )

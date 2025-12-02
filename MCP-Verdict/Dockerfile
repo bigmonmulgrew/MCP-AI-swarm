@@ -9,11 +9,11 @@ COPY ./common /common
 RUN pip install /common
 
 # Copy the app itself
-COPY ./MCP-Visualiser /app
+COPY ./MCP-Data /app
 RUN pip install -r requirements.txt
 
 # Expose port
-EXPOSE 8070
+EXPOSE 8050
 
 # Run FastAPI with Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8070"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8050"]

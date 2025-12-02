@@ -41,3 +41,21 @@ class UserQuery(BaseModel):
         False,
         description="If set to true this will include some additional debugging information not required to function, such as the system prompt.",
     )
+    
+class AIQuery(BaseModel):
+    prompt: str = Field(
+        description=""
+    )
+    model: str = Field(
+        description="The model to use"
+    )
+    options: Dict[str, Any] = Field(
+        {}, description="Options provided to the AI backend"
+    )
+    temperature: float = Field(
+        0.0, description="The temperature used to control ai reasoning. 0 = predicable results. Recommend 0.6-0.8 for better reasoning."
+    )
+    max_tokens: int = Field(
+        10000, description="Token limit for the AI model. Can be used to help truncate messages or long requests"
+    )
+    

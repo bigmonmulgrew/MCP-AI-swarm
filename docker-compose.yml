@@ -5,7 +5,7 @@ services:
     ports:
       - "${OLLAMA_PORT_E:-11434}:${OLLAMA_PORT_I:-11434}"
     volumes:
-      - ${OLLAMA_MODEL_STORAGE:-./ollama-data}:/var/lib/ollama
+      - ${OLLAMA_MODEL_STORAGE:-./ollama_models}:/root/.ollama
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
@@ -18,6 +18,24 @@ services:
               count: all
               capabilities: [gpu]
     runtime: nvidia
+
+  aiqueue:
+    build:
+      context: .
+      dockerfile: ./AIqueue/Dockerfile
+    container_name: ai-queue
+    ports:
+      - "${AI_QUEUE_PORT_E:-9090}:${AI_QUEUE_PORT_I:-9090}"
+    environment:
+      - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - OLLAMA_DEFAULT_MODEL="${OLLAMA_DEFAULT_MODEL:-llama3.2}"
+      - AI_MAX_CONCURRENT="${AI_MAX_CONCURRENT:-1}"
+
+    volumes:
+      - ./AIqueue:/app   # live code mounting for dev
+    depends_on:
+      - ollama
+    restart: unless-stopped
 
   frontend:
     build:
@@ -45,12 +63,13 @@ services:
       - "${MCPS_PORT_E:-8080}:${MCPS_PORT_I:-8080}"
     environment:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - AI_QUEUE_URL=http://${AI_QUEUE_HOST:-ai-queue}:${AI_QUEUE_PORT_E:-9090}
       - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_E:-8060}
       - MCP_VISUALISER_URL=http://${MCP_VISUALISER_HOST:-mcp-data}:${MCP_VISUALISER_PORT_E:-8060}
     volumes:
       - ./mcps:/app   # live code mounting for dev
     depends_on:
-      - ollama
+      - aiqueue
     restart: unless-stopped
 
   mcp-visualiser:

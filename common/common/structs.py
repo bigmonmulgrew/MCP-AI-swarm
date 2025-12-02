@@ -53,7 +53,7 @@ class AIQuery(BaseModel):
         {}, description="Options provided to the AI backend"
     )
     temperature: float = Field(
-        0.6, description="The temperature used to control ai reasoning. 0 = predicable results. Recommend 0.6-0.8 for better reasoning."
+        0.0, description="The temperature used to control ai reasoning. 0 = predicable results. Recommend 0.6-0.8 for better reasoning."
     )
     max_tokens: int = Field(
         10000, description="Token limit for the AI model. Can be used to help truncate messages or long requests"

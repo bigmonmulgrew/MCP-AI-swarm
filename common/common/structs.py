@@ -60,6 +60,15 @@ class AIQuery(BaseModel):
     )
 
 class BlocHubResponse(BaseModel):
-    result: str = Field(
-        description="The final result to send to bloc hub formatted as a json string."
+    light_result: int = Field(
+        description="The final result to send to bloc hub formatted as a json string. Red: 0, Amber: 1, Green: 2"
+    )
+    text_result: str = Field(
+        description="Short advisory text sumamrising the results"
+    )
+    time: float = Field(
+        description="The generation time of the response in UTC"
+    )
+    debug_data: str = Field(
+        description="A JSON data structure containing summaries of data used in reasoning. Only provided when verbose = true"
     )

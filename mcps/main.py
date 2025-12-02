@@ -13,6 +13,7 @@ AI_QUEUE_URL = os.getenv("AI_QUEUE_URL", "http://ai-queue:9090")
 # === Environment variables === TODO temporary
 MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
 MCP_VISUALISER_URL = os.getenv("MCP_VISUALISER_URL", "http://mcp-visualiser:8070")
+MCP_VERDICT_URL = os.getenv("MCP_VERDICT_URL", "http://mcp-verdict:8050")
 
 @app.get("/")
 def read_root():
@@ -139,3 +140,39 @@ def process_user_query_stack(data: UserQuery):
     }
 
     return response_data
+
+@app.post("/debug-verdict")
+def debug_verdict(data: UserQuery):
+    """Debug endpoint to simulate verdict processing."""
+    dqo = DroneQueryObject(
+        Query=data.query,
+        RecursionDepth=1,
+        OriginalSPrompt="You are a helpful AI assistant.",
+        MessageHistory={},
+        CurrentTime=time(),
+    )
+
+    try:
+        print(f"[MCPS] Calling Data MCP: {MCP_DATA_URL}/query")
+        res_data = requests.post(f"{MCP_DATA_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_data.raise_for_status()
+        data_json = res_data.json()
+
+        # Inject response back into dqo for further processing
+        dqo.MessageHistory = {
+            "data_drone_response": data_json["structuredMsg"]
+        }
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Data MCP: {e}")
+
+    try:
+        print(f"[MCPS] Calling Verdict Drone: {MCP_VERDICT_URL}/query")
+        res_verdict = requests.post(f"{MCP_VERDICT_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_verdict.raise_for_status()
+        verdict_json = res_verdict.json()
+        return verdict_json
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Verdict Drone: {e}")
+        return {"error": "Verdict Drone unreachable"}
+        
+    

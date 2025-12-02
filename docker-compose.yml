@@ -66,6 +66,7 @@ services:
       - AI_QUEUE_URL=http://${AI_QUEUE_HOST:-ai-queue}:${AI_QUEUE_PORT_E:-9090}
       - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_E:-8060}
       - MCP_VISUALISER_URL=http://${MCP_VISUALISER_HOST:-mcp-data}:${MCP_VISUALISER_PORT_E:-8060}
+      - MCP_VERDICT_URL=http://${MCP_VERDICT_HOST:-mcp-verdict}:${MCP_VERDICT_PORT_E:-8050}
     volumes:
       - ./mcps:/app   # live code mounting for dev
     depends_on:

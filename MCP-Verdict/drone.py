@@ -1,4 +1,4 @@
-from common import DroneQueryObject, BaseDroneServer, Message, BOOT_IMAGE, t_light_rules
+from common import DroneQueryObject, BaseDroneServer, Message, BOOT_IMAGE, T_LIGHT_RULES
 from pathlib import Path
 
 class VerdictDrone(BaseDroneServer):
@@ -11,7 +11,7 @@ class VerdictDrone(BaseDroneServer):
             payload = Message(
                 role = "bot"   ,                            # Message sender type
                 Msg = "",           # The actual message  # {{I1}} token for image replacement example only, no defined format yet
-                stucturedMsg =  [t_light_rules],  # Structured data strings
+                structuredMsg =  [T_LIGHT_RULES],  # Structured data strings
                 Images = [],
                 Files = [],
                 Videos = []

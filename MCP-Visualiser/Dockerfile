@@ -9,7 +9,7 @@ COPY ./common /common
 RUN pip install /common
 
 # Copy the app itself
-COPY ./mcps /app
+COPY ./MCP-Visualiser /app
 RUN pip install -r requirements.txt
 
 # Expose port

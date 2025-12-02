@@ -2,6 +2,12 @@
 # see sample.env for defaults
 .env
 
+# Ignore virtual environment
+venv/
+*/venv/
+**/venv/
+
+
 # Ignore downloaded Ollama models
 ollama-data/
 

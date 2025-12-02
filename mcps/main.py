@@ -53,7 +53,16 @@ def process_user_query(data: UserQuery):
     """Endpoint for the user query or a hard coded system query.
     e.g. What are my risks?"""
 
-    #response_data = BOOT_QUERY_RESPOSNE_01
+    response_data = BOOT_QUERY_RESPOSNE_01
+    
+    
+    return response_data
+
+@app.post("/bloc-query")
+def process_bloc_query(verbose: bool):
+    """ Tailored endpoint for testing Bloc's use case. No query data object required.
+    Returns a BlocHubResponse object. When verbose = true also includes reasoning data in JSON"""
+
     response_data = BOOT_BLOC_HUB_RESPONSE
     
     return response_data

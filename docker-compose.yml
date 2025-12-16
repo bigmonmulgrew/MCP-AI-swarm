@@ -124,3 +124,19 @@ services:
     depends_on:
       - ollama
     restart: unless-stopped
+  mcp-domain:
+    build:
+      context: .
+      dockerfile: ./MCP-Domain/Dockerfile
+    container_name: mcp-domain-container
+    ports:
+      - "${MCP_DOMAIN_PORT_E:-8040}:${MCP_DOMAIN_PORT_I:-8040}"
+    environment:
+      - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - MCPS_HOST=${MCPS_HOST:-127.0.0.1}
+      - MCPS_PORT=${MCPS_PORT_I:-8080}
+    volumes:
+      - ./MCP-Domain:/app    # live code mounting for dev
+    depends_on:
+      - ollama
+    restart: unless-stopped

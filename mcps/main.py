@@ -178,4 +178,24 @@ def debug_verdict(data: UserQuery):
         print(f"[MCPS] Error calling Verdict Drone: {e}")
         return {"error": "Verdict Drone unreachable"}
         
-    
+@app.post("/debug-domain")
+def debug_domain(data: UserQuery):
+    """Debug endpoint to simulate domain processing."""
+    dqo = DroneQueryObject(
+        Query=data.query,
+        RecursionDepth=1,
+        OriginalSPrompt="You are a helpful AI assistant.",
+        MessageHistory={},
+        CurrentTime=time(),
+    )
+
+    try:
+        print(f"[MCPS] Calling Domain Drone")
+        res_domain = requests.post(f"http://mcp-domain:8040/query", json=dqo.model_dump(mode = "json"))
+        res_domain.raise_for_status()
+        domain_json = res_domain.json()
+        dqo.MessageHistory["domain_drone_response"] = domain_json
+        return dqo
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Domain Drone: {e}")
+        return {"error": "Domain Drone unreachable"}

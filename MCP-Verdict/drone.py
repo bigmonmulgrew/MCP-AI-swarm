@@ -1,4 +1,7 @@
-from common import DroneQueryObject, BaseDroneServer, Message, BOOT_IMAGE, T_LIGHT_RULES
+from common import (
+    DroneQueryObject, BaseDroneServer, Message, BOOT_IMAGE, 
+    apply_plan, red_plan, amber_plan, normalized_camera_data
+)
 from pathlib import Path
 
 class VerdictDrone(BaseDroneServer):
@@ -8,15 +11,34 @@ class VerdictDrone(BaseDroneServer):
 
             print(f"Received query: {dqo.Query}")
 
-            data = dqo.MessageHistory.get("data_drone_response", {})
+            # Apply filter plans to camera data
+            red_matches = apply_plan(normalized_camera_data, red_plan)
+            amber_matches = apply_plan(normalized_camera_data, amber_plan)
             
-            for camera in data.structuredMsg:
-                print(f"Camera Data: {camera}")
+            # Determine verdict based on matches
+            # Red = critical issue (both cameras off)
+            # Amber = warning (maintenance period detected)
+            # Green = all clear
+            if len(red_matches) > 0:
+                verdict = "red"
+                msg = f"CRITICAL: Found {len(red_matches)} instances where both cameras were off."
+            elif len(amber_matches) > 0:
+                verdict = "amber"
+                msg = f"WARNING: Found {len(amber_matches)} records outside maintenance period."
+            else:
+                verdict = "green"
+                msg = "All clear: No issues detected."
             
             payload = Message(
-                role = "bot"   ,                            # Message sender type
-                Msg = "",           # The actual message  # {{I1}} token for image replacement example only, no defined format yet
-                structuredMsg =  [T_LIGHT_RULES],  # Structured data strings
+                role = "bot",
+                Msg = msg,
+                structuredMsg = {
+                    "verdict": verdict,
+                    "red_matches": len(red_matches),
+                    "amber_matches": len(amber_matches),
+                    "red_data": red_matches,
+                    "amber_data": amber_matches
+                },
                 Images = [],
                 Files = [],
                 Videos = []

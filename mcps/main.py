@@ -215,3 +215,25 @@ def debug_domain(data: UserQuery):
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Domain Drone: {e}")
         return {"error": "Domain Drone unreachable"}
+    
+@app.post("/debug-filter")
+def debug_filter(data: UserQuery):
+    """Debug endpoint to simulate filter processing."""
+    dqo = DroneQueryObject(
+        Query=data.query,
+        RecursionDepth=1,
+        OriginalSPrompt="You are a helpful AI assistant.",
+        MessageHistory={},
+        CurrentTime=time(),
+    )
+
+    try:
+        print(f"[MCPS] Calling Filter Drone")
+        res_filter = requests.post(f"http://mcp-filter:8030/query", json=dqo.model_dump(mode = "json"))
+        res_filter.raise_for_status()
+        filter_json = res_filter.json()
+        dqo.MessageHistory["filter_drone_response"] = filter_json
+        return dqo
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Filter Drone: {e}")
+        return {"error": "Filter Drone unreachable"}

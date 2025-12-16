@@ -17,9 +17,6 @@ red_plan = {
     ]
 }
 
-# Amber rule: "Cameras are not in the maintenance period."
-# This excludes rows where timestamp falls within a maintenance window
-# For demo purposes, using a sample maintenance window
 amber_plan = {
     "rule": "amber",
     "description": "Cameras are not in the maintenance period.",

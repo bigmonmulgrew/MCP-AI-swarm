@@ -17,6 +17,7 @@ const MCPS_URL = `http://${MCPS_HOST}:${MCPS_PORT}`;
 const MCP_VISUALISER_URL = process.env.MCP_VISUALISER_URL || "http://localhost:8070";
 const MCP_DATA_URL = process.env.MCP_DATA_URL || "http://localhost:8060";
 
+
 // Serve static frontend
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -128,6 +129,27 @@ app.get("/call-user-query-stack", async (req, res) => {
   } catch (err) {
     console.error("Error calling MCPS /query-stack:", err.message);
     res.status(500).json({ error: "Failed to call MCPS /query-stack", details: String(err) });
+  }
+});
+
+app.get("/call-verdict", async (req, res) => {
+  try {
+    const payload = {
+      query: "Please provide a safety verdict based on the latest drone data.",
+      system_prompt: "You are a safety assessment AI.",
+      chat_name: "verdict_debug_chat",
+      debug_test: true,
+      verbose: true
+    };
+
+    const { data } = await axios.post(`${MCPS_URL}/debug-verdict`, payload, {
+      headers: { "Content-Type": "application/json" }
+    });
+
+    res.json(data);
+  } catch (err) {
+    console.error("Error calling MCPS /debug-verdict:", err.message);
+    res.status(500).json({ error: "Failed to call MCPS /debug-verdict", details: String(err) });
   }
 });
 

@@ -1,7 +1,8 @@
 import requests
 from common import DroneQueryObject, BaseDroneServer, Message
+import os
 
-API_URL = "http://localhost:9090/query"
+API_URL = "http://" + os.getenv("MCPS_HOST", "127.0.0.1") + ":" + os.getenv("MCPS_PORT", "8080") + "/ai-query"
 
 class DomainDrone(BaseDroneServer):
     def _register_subclass_endpoints(self):
@@ -24,12 +25,11 @@ class DomainDrone(BaseDroneServer):
                 "options": {}
             }
 
-            try:
-                response = requests.post(API_URL, json=ai_payload, timeout = 120)
-                response.raise_for_status()
-                print(response.json())
-            except Exception as e:
-                print(e)
+            
+            response = requests.post(API_URL, json=ai_payload, timeout = 120)
+            response.raise_for_status()
+            print(response.json())
+            
             
             payload = Message(
                 role="bot",

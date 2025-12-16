@@ -72,6 +72,22 @@ def process_user_query(data: UserQuery):
 def process_ai_query(data: dict):
     """
     Explicit endpoint for intentional AI requests.
+
+    Example usage within MCP-Domain/drone.py:
+    # API_URL = "http://" + os.getenv("MCPS_HOST", "127.0.0.1") + ":" + os.getenv("MCPS_PORT", "8080") + "/ai-query"
+
+    # ai_payload = {
+    #                 "prompt": "tell me about lightning mcqueen",
+    #                 "model": "qwen3:1.7b",
+    #                 "options": {}
+    #             }
+
+    #             try:
+    #                 response = requests.post(API_URL, json=ai_payload, timeout = 120)
+    #                 response.raise_for_status()
+    #                 print(response.json())
+    #             except Exception as e:
+    #                 print(e)
     """
     try:
         res = requests.post(f"{AI_QUEUE_URL}/query", json=data)

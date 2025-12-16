@@ -24,8 +24,8 @@ amber_plan = {
         {
             "type": "exclude_window",
             "field": "timestamp",
-            "start": 1760650220000,
-            "end": 1760650240000
+            "start": 1764547200, #1760650220000,
+            "end": 1795996800 #1760650240000
         }
     ]
 }

@@ -5,7 +5,6 @@
 # This checks if both cam1 and cam2 equal 0
 red_plan = {
     "rule": "red",
-    "description": "At any time, both cameras are off.",
     "filters": [
         {
             "type": "all",
@@ -19,7 +18,6 @@ red_plan = {
 
 amber_plan = {
     "rule": "amber",
-    "description": "Cameras are not in the maintenance period.",
     "filters": [
         {
             "type": "exclude_window",

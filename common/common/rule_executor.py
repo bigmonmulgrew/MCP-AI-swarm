@@ -13,7 +13,6 @@ def apply_plan(rows: List[Row], plan: Dict[str, Any]) -> List[Row]:
         plan: Dictionary describing filters to apply, e.g.:
             {
                 "rule": "red",
-                "description": "...",
                 "filters": [
                     {"type": "all", "conditions": [...]},
                     {"type": "exclude_window", "field": "timestamp", "start": ..., "end": ...}

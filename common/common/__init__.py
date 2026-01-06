@@ -4,3 +4,4 @@ from .base_drone import BaseDroneServer
 from .rule_executor import apply_plan
 from .filter_plans import red_plan, amber_plan
 from .camera_data import normalized_camera_data
+from .parse_structured_msg import parse_structured_msg

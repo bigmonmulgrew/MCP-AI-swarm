@@ -1,6 +1,6 @@
 import json
 from time import time
-from common import DroneQueryObject, BaseDroneServer, Message, DOMAIN_JSON
+from common import DroneQueryObject, BaseDroneServer, Message, DOMAIN_JSON, parse_structured_msg
 from datetime import datetime, timezone
 import os
 import requests
@@ -128,43 +128,12 @@ class FilterDrone(BaseDroneServer):
                                     return filtered"""
 
             ai_payload = {
-                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red filter. Here is the camera data for the filter: {dqo.MessageHistory['data_drone_response'].structuredMsg[0]}\n Output JSON only. Then, create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber filter. The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
+                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red_filter(use this key). Here is the camera data for the filter: {dqo.MessageHistory['data_drone_response'].structuredMsg[0]}\n Output JSON only. Then, create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber_filter(use this key). The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
                 "model": "qwen3:1.7b",
                 "options": {}
             }
 
-            print(ai_payload["prompt"])
 
-            ai_red = {
-                "filters": [
-                    {
-                        "type": "all",
-                        "conditions": [
-                            {
-                                "field": "cam1",
-                                "op": "eq",
-                                "value": 0
-                            },
-                            {
-                                "field": "cam2",
-                                "op": "eq",
-                                "value": 0
-                            }
-                        ]
-                    }
-                ]   
-            }
-
-            ai_amber = {
-                "filters": [
-                    {
-                        "type": "exclude_window",
-                        "start": 1764547200,
-                        "end": 1795996800,
-                        "field": "timestamp"
-                    }
-                ]
-            }
 
             json_response = None
             try:
@@ -173,12 +142,19 @@ class FilterDrone(BaseDroneServer):
                 json_response = response.json()
             except Exception as e:
                 print(e)
+
+
+            # Handle case where request failed
+            if json_response is None or 'result' not in json_response:
+                structured_data = []
+            else:
+                structured_data = [parse_structured_msg([json_response['result']['response']])]
             
             payload = Message(
                 role="bot",
                 Msg="Response from FilterDrone",
                 Images=[],
-                structuredMsg=[ai_red, ai_amber],
+                structuredMsg=structured_data,
                 Files=[],
                 Videos=[]
             )

@@ -240,6 +240,7 @@ def debug_domain(data: UserQuery):
         print(f"[MCPS] Error calling Domain Drone: {e}")
         return {"error": "Domain Drone unreachable"}
     
+    
 @app.post("/debug-filter")
 def debug_filter(data: UserQuery):
     """Debug endpoint to simulate filter processing."""

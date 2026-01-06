@@ -14,6 +14,8 @@ AI_QUEUE_URL = os.getenv("AI_QUEUE_URL", "http://ai-queue:9090")
 MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
 MCP_VISUALISER_URL = os.getenv("MCP_VISUALISER_URL", "http://mcp-visualiser:8070")
 MCP_VERDICT_URL = os.getenv("MCP_VERDICT_URL", "http://mcp-verdict:8050")
+MCP_DOMAIN_URL = os.getenv("MCP_DOMAIN_URL", "http://mcp-domain:8040")
+MCP_FILTER_URL = os.getenv("MCP_FILTER_URL", "http://mcp-filter:8030")
 
 @app.get("/")
 def read_root():
@@ -177,18 +179,40 @@ def debug_verdict(data: UserQuery):
         
 
         # Inject response back into dqo for further processing
-        dqo.MessageHistory = {
-            "data_drone_response": data_json
-        }
+        dqo.MessageHistory ["data_drone_response"] = data_json
+        print(dqo.MessageHistory)
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Data MCP: {e}")
 
     try:
-        print(f"[MCPS] Calling Verdict Drone: {MCP_VERDICT_URL}/query")
+        print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_URL}/query")
+        res_domain = requests.post(f"{MCP_DOMAIN_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_domain.raise_for_status()
+        domain_json = res_domain.json()
+
+        dqo.MessageHistory ["domain_drone_response"] = domain_json
+        print(dqo.MessageHistory)
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Domain MCP: {e}")
+
+    try:
+        print(f"[MCPS] Calling Filter MCP: {MCP_FILTER_URL}/query")
+        res_filter = requests.post(f"{MCP_FILTER_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_filter.raise_for_status()
+        filter_json = res_filter.json()
+
+        dqo.MessageHistory ["filter_drone_response"] = filter_json
+        print(dqo.MessageHistory)
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Filter MCP: {e}")
+
+    try:
+        print(f"[MCPS] Calling Verdict MCP: {MCP_VERDICT_URL}/query")
         res_verdict = requests.post(f"{MCP_VERDICT_URL}/query", json=dqo.model_dump(mode = "json"))
         res_verdict.raise_for_status()
         verdict_json = res_verdict.json()
         dqo.MessageHistory["verdict_drone_response"] = verdict_json
+        print(dqo.MessageHistory)
         return dqo
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Verdict Drone: {e}")

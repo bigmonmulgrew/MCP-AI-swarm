@@ -45,14 +45,9 @@ class FilterDrone(BaseDroneServer):
             # except requests.exceptions.RequestException as e:
             #     print(f"Error calling MCP-Data: {e}")
 
-            normalized_camera_data = [
-                {"timestamp": ts, "cam1": c1, "cam2": c2}
-                for ts, c1, c2 in dqo.MessageHistory["data_drone_response"]["structuredMsg"][0]
-            ]
-
             epoch_times = []
 
-            for item in dqo.MessageHistory["domain_drone_response"]["structuredMsg"]["maintenance_period"].values():
+            for item in dqo.MessageHistory["domain_drone_response"].structuredMsg[0]["maintenance_period"].values():
                 date_time = item.split("-")
                 dt = datetime(int(date_time[0]), int(date_time[1]), int(date_time[2]), tzinfo=timezone.utc)
                 epoch_time = dt.timestamp()
@@ -133,12 +128,43 @@ class FilterDrone(BaseDroneServer):
                                     return filtered"""
 
             ai_payload = {
-                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red filter. Here is the camera data for the filter: {json.dumps(normalized_camera_data)}\n Output JSON only. Then, create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber filter. The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
+                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red filter. Here is the camera data for the filter: {dqo.MessageHistory['data_drone_response'].structuredMsg[0]}\n Output JSON only. Then, create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber filter. The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
                 "model": "qwen3:1.7b",
                 "options": {}
             }
 
             print(ai_payload["prompt"])
+
+            ai_red = {
+                "filters": [
+                    {
+                        "type": "all",
+                        "conditions": [
+                            {
+                                "field": "cam1",
+                                "op": "eq",
+                                "value": 0
+                            },
+                            {
+                                "field": "cam2",
+                                "op": "eq",
+                                "value": 0
+                            }
+                        ]
+                    }
+                ]   
+            }
+
+            ai_amber = {
+                "filters": [
+                    {
+                        "type": "exclude_window",
+                        "start": 1764547200,
+                        "end": 1795996800,
+                        "field": "timestamp"
+                    }
+                ]
+            }
 
             json_response = None
             try:
@@ -152,7 +178,7 @@ class FilterDrone(BaseDroneServer):
                 role="bot",
                 Msg="Response from FilterDrone",
                 Images=[],
-                structuredMsg=[json_response["result"]["response"]],
+                structuredMsg=[ai_red, ai_amber],
                 Files=[],
                 Videos=[]
             )

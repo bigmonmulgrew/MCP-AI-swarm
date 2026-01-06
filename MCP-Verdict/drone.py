@@ -11,9 +11,17 @@ class VerdictDrone(BaseDroneServer):
 
             print(f"Received query: {dqo.Query}")
 
+            red_filter = {
+                "filters": dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["red_filter"]
+            }
+
+            amber_filter = {
+                "filters": dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["amber_filter"]
+            }
+
             # Apply filter plans to camera data
-            red_matches = apply_plan(dqo.MessageHistory["data_drone_response"].structuredMsg[0], dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["red_filter"])
-            amber_matches = apply_plan(dqo.MessageHistory["data_drone_response"].structuredMsg[0], dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["amber_filter"])
+            red_matches = apply_plan(dqo.MessageHistory["data_drone_response"].structuredMsg[0], red_filter)
+            amber_matches = apply_plan(dqo.MessageHistory["data_drone_response"].structuredMsg[0], amber_filter)
             
             # Determine verdict based on matches
             # Red = critical issue (both cameras off)

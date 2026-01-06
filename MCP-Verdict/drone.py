@@ -1,7 +1,4 @@
-from common import (
-    DroneQueryObject, BaseDroneServer, Message, BOOT_IMAGE, 
-    apply_plan, red_plan, amber_plan, normalized_camera_data
-)
+from common import DroneQueryObject, BaseDroneServer, Message, apply_plan
 from pathlib import Path
 
 class VerdictDrone(BaseDroneServer):
@@ -11,13 +8,30 @@ class VerdictDrone(BaseDroneServer):
 
             print(f"Received query: {dqo.Query}")
 
-            red_filter = {
-                "filters": dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["red_filter"]
-            }
+            # print(dqo.MessageHistory["filter_drone_response"].structuredMsg[0].values())
 
-            amber_filter = {
-                "filters": dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["amber_filter"]
-            }
+            red_filter = dqo.MessageHistory["filter_drone_response"].structuredMsg[0]
+            amber_filter = dqo.MessageHistory["filter_drone_response"].structuredMsg[1]
+
+            print("Red Filter Plan:")
+            print(red_filter)
+            print("Amber Filter Plan:")
+            print(amber_filter)
+
+            # red_plan = {
+            #     "filters": red_filter
+            # }
+
+            # amber_plan = {
+            #     "filters": amber_filter
+            # }
+
+            # print(dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["red_filter"])
+            # print(dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["amber_filter"])
+
+            # red_filter = dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["red_filter"]
+
+            # amber_filter = dqo.MessageHistory["filter_drone_response"].structuredMsg[0]["amber_filter"]
 
             # Apply filter plans to camera data
             red_matches = apply_plan(dqo.MessageHistory["data_drone_response"].structuredMsg[0], red_filter)

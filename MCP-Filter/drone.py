@@ -128,8 +128,8 @@ class FilterDrone(BaseDroneServer):
                                     return filtered"""
 
             ai_payload = {
-                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red_filter(use this key). Here is the camera data for the filter: {dqo.MessageHistory['data_drone_response'].structuredMsg[0]}\n Output JSON only. Then, create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber_filter(use this key). The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
-                "model": "qwen3:1.7b",
+                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red filter (still just start the json with 'filters':). Here is the camera data for the filter: {dqo.MessageHistory['data_drone_response'].structuredMsg[0]}\n Output JSON only. Then, create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber filter (still just start the json with 'filters':). The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
+                "model": "qwen2.5-coder:7b",
                 "options": {}
             }
 
@@ -144,11 +144,14 @@ class FilterDrone(BaseDroneServer):
                 print(e)
 
 
+            print(f"AI response: {json_response['result']['response']}")
+
             # Handle case where request failed
             if json_response is None or 'result' not in json_response:
                 structured_data = []
             else:
-                structured_data = [parse_structured_msg([json_response['result']['response']])]
+                structured_data = parse_structured_msg([json_response['result']['response']])
+
             
             payload = Message(
                 role="bot",

@@ -47,8 +47,83 @@ class FilterDrone(BaseDroneServer):
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             # TODO: add the apply_filter function definition to the prompt 
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+            apply_plan_definition = """def apply_plan(rows: List[Row], plan: Dict[str, Any]) -> List[Row]:
+                                    # Define comparison operators
+                                    def op_eq(val, target): 
+                                        return val == target
+                                    
+                                    def op_ne(val, target): 
+                                        return val != target
+                                    
+                                    def op_gt(val, target): 
+                                        return val > target
+                                    
+                                    def op_gte(val, target): 
+                                        return val >= target
+                                    
+                                    def op_lt(val, target): 
+                                        return val < target
+                                    
+                                    def op_lte(val, target): 
+                                        return val <= target
+
+                                    # Map operator names to functions
+                                    op_map: Dict[str, Callable[[Any, Any], bool]] = {
+                                        "eq": op_eq, 
+                                        "ne": op_ne, 
+                                        "gt": op_gt, 
+                                        "gte": op_gte, 
+                                        "lt": op_lt, 
+                                        "lte": op_lte
+                                    }
+
+                                    def match_all(row: Row, conditions: List[Dict[str, Any]]) -> bool:
+                                        return all(
+                                            op_map[c["op"]](row.get(c["field"]), c["value"]) 
+                                            for c in conditions
+                                        )
+
+                                    # Start with all rows
+                                    filtered = rows
+                                    
+                                    # Apply each filter in sequence
+                                    for f in plan.get("filters", []):
+                                        ftype = f.get("type")
+                                        
+                                        if ftype == "exclude_window":
+                                            # Exclude rows whose field value falls within [start, end]
+                                            start = f["start"]
+                                            end = f["end"]
+                                            field = f["field"]
+                                            filtered = [
+                                                r for r in filtered 
+                                                if not (start <= r.get(field, 0) <= end)
+                                            ]
+                                        
+                                        elif ftype == "all":
+                                            # Keep only rows where all conditions are true
+                                            conditions = f.get("conditions", [])
+                                            filtered = [
+                                                r for r in filtered 
+                                                if match_all(r, conditions)
+                                            ]
+                                        
+                                        elif ftype == "any":
+                                            # Keep rows where at least one condition is true
+                                            conditions = f.get("conditions", [])
+                                            filtered = [
+                                                r for r in filtered 
+                                                if any(match_all(r, [c]) for c in conditions)
+                                            ]
+                                        
+                                        else:
+                                            raise ValueError(f"Unknown filter type: {ftype}")
+                                    
+                                    return filtered"""
+
             ai_payload = {
-                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red filter. Here is the camera data for the filter: {json.dumps(normalized_camera_data)}\n Output JSON only. Then, create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={data_json['structuredMsg'][1][0]} and end={data_json['structuredMsg'][1][1]}. This is the amber filter. Output JSON only.",
+                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red filter. Here is the camera data for the filter: {json.dumps(normalized_camera_data)}\n Output JSON only. Then, create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={data_json['structuredMsg'][1][0]} and end={data_json['structuredMsg'][1][1]}. This is the amber filter. The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
                 "model": "qwen3:1.7b",
                 "options": {}
             }

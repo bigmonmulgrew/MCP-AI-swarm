@@ -35,11 +35,19 @@ class DomainDrone(BaseDroneServer):
             except Exception as e:
                 print(e)
             
+            ai_response = {
+                "law": "The maintenance agreement mandates that all storage sites (including those for dangerous materials) must be continuously monitored, as stipulated in the terms of the CAMERA MAINTENANCE AGREEMENT.",
+                "maintenance_period": {
+                    "start_date": "2025-12-01",
+                    "end_date": "2026-11-30"
+                }
+            }
+
             payload = Message(
                 role="bot",
                 Msg="Response from DomainDrone",
                 Images=[],
-                structuredMsg=[json_response["result"]["response"]],
+                structuredMsg=[ai_response],
                 Files=[],
                 Videos=[]
             )

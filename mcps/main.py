@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-from common import DroneOnlineObject, DroneQueryObject, UserQuery   # Used items from common
+from common import DroneOnlineObject, DroneQueryObject, UserQuery, BlocHubResponse   # Used items from common
 from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                        # Bootstrapping placeholders to be removes
+from common import BOOT_BLOC_HUB_RESPONSE, BOOT_QUERY_RESPOSNE_01
 import requests
 import os
 from time import time
@@ -51,20 +52,33 @@ def heartbeatResponse():
 def process_user_query(data: UserQuery):
     """Endpoint for the user query or a hard coded system query.
     e.g. What are my risks?"""
-    response_data = {
-        "status": 200,
-        "query": "user asked something",
-        "chat_name": "sample chat name",
-        "results": [
-            {
-                "message": "sample message response",
-                "images": [],
-                "files": [],
-                "videos":[]
-            }
-        ],
-    }
+
+    response_data = BOOT_QUERY_RESPOSNE_01
     
+    
+    return response_data
+
+@app.get("/bloc-query")
+def process_bloc_query_get(verbose: bool = False):
+    """Tailored endpoint for testing Bloc's use case.
+    Returns a BlocHubResponse object. When verbose = true also includes reasoning data
+    """
+    boot_response = BlocHubResponse(**BOOT_BLOC_HUB_RESPONSE)
+
+    if verbose:
+        response_data = BlocHubResponse(
+            light_result = boot_response.light_result,
+            text_result = boot_response.text_result,
+            time = boot_response.time,
+            debug_data = boot_response.debug_data
+        )
+    else:
+        response_data = BlocHubResponse(
+            light_result = boot_response.light_result,
+            text_result = boot_response.text_result,
+            time = boot_response.time
+        )
+
     return response_data
 
 @app.post("/ai-query")

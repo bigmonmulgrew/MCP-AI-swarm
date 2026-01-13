@@ -164,12 +164,12 @@ class FilterDrone(BaseDroneServer):
             if json_response_red is None or 'result' not in json_response_red:
                 structured_data += []
             else:
-                structured_data += parse_structured_msg([json_response_red['result']['response']])
+                structured_data.append(parse_structured_msg([json_response_red['result']['response']]))
 
             if json_response_amber is  None and 'result' not in json_response_amber:
                 structured_data += []
             else:
-                structured_data += parse_structured_msg([json_response_amber['result']['response']])
+                structured_data.append(parse_structured_msg([json_response_amber['result']['response']]))
             
             payload = Message(
                 role="bot",
@@ -179,6 +179,8 @@ class FilterDrone(BaseDroneServer):
                 Files=[],
                 Videos=[]
             )
+
+            print(payload)
             return payload
     
     # Add custom methods below

@@ -83,60 +83,43 @@ if __name__ == "__main__":
     example_msg = [
         """```json
 
-filters: [
+{
+
+  "filters": [
 
     {
 
-        "type": "all",
+      "type": "all",
 
-        "conditions": [
+      "conditions": [
 
-            {
+        {
 
-                "field": "cam1",
+          "field": "cam1",
 
-                "op": "eq",
+          "op": "eq",
 
-                "value": 0
+          "value": 0
 
-            },
+        },
 
-            {
+        {
 
-                "field": "cam2",
+          "field": "cam2",
 
-                "op": "eq",
+          "op": "eq",
 
-                "value": 0
+          "value": 0
 
-            }
+        }
 
-        ]
-
-    }
-
-]
-
-```
-
-
-```json
-
-filters: [
-
-    {
-
-        "type": "exclude_window",
-
-        "start": 1763424000.0,
-
-        "end": 1795996800.0,
-
-        "field": "timestamp"
+      ]
 
     }
 
-]
+  ]
+
+}
 
 ```"""
     ]

@@ -9,7 +9,7 @@ COPY ./common /common
 RUN pip install /common
 
 # Copy the app itself
-COPY ./MCP-Data /app
+COPY ./MCP-Verdict /app
 RUN pip install -r requirements.txt
 
 # Expose port

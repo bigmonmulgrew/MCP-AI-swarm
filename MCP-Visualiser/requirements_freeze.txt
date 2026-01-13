@@ -5,7 +5,8 @@ certifi==2025.11.12
 charset-normalizer==3.4.4
 click==8.3.1
 colorama==0.4.6
--e git+https://github.com/bigmonmulgrew/MCP-AI-swarm.git@9f134fe9ec7d1b504da68d63b087ec0ff8cca76d#egg=common&subdirectory=common
+# Editable install with no version control (common==0.1.0)
+-e c:\git\mcp-ai-swarm\common
 fastapi==0.123.3
 h11==0.16.0
 httptools==0.7.1

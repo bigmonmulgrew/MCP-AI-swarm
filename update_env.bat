@@ -1,129 +1,190 @@
 @echo off
-title MCO Tool - Update Environment Variables
-echo ============================================
-echo       MCO TOOL - UPDATE .ENV FILE
-echo ============================================
+setlocal EnableExtensions EnableDelayedExpansion
+title Environment Variable Updater (Multi-env)
 
-REM Step 1: Ensure sample.env exists
-if not exist "sample.env" (
-    echo ERROR: sample.env not found. Please ensure it exists in this folder.
-    pause
-    exit /b
+set "PREFIX=sample.env"
+
+echo ============================================
+echo   Environment Variable Updater (Multi-env)
+echo ============================================
+echo.
+
+REM --------------------------------------------------
+REM Discover sample.env* files
+REM --------------------------------------------------
+set "FOUND_ANY=0"
+
+echo Found files matching "%PREFIX%*":
+echo --------------------------------------------
+
+for %%F in (%PREFIX%*) do (
+    echo   - %%F
+    set "FOUND_ANY=1"
 )
 
-REM Step 2: If .env does not exist, create it from sample.env
-if not exist ".env" (
-    echo .env not found. Creating new one from sample.env...
-    copy sample.env .env >nul
-    echo Created .env successfully.
-    pause
-    exit /b
+if "!FOUND_ANY!"=="0" (
+    echo ERROR: No files found.
+    exit /b 1
+)
+
+
+echo --------------------------------------------
+echo.
+
+REM --------------------------------------------------
+REM Sync each discovered file
+REM --------------------------------------------------
+for %%F in (%PREFIX%*) do (
+    call :sync_env "%%F"
 )
 
 echo.
 echo ============================================
-echo Syncing .env with sample.env (preserving comments and spacing)...
-echo ============================================
-
-setlocal enabledelayedexpansion
-set "TEMP_NEW=.env.new"
-set "TEMP_OLD=.env"
-set "TEMP_KEYS=.env.keys"
-set "TEMP_EXTRA=.env.extra"
-
-del "%TEMP_NEW%" >nul 2>&1
-del "%TEMP_KEYS%" >nul 2>&1
-del "%TEMP_EXTRA%" >nul 2>&1
-
-REM Step 3: Loop through each line in sample.env
-for /f "usebackq delims=" %%L in ("sample.env") do (
-    set "line=%%L"
-    call :process_line
-)
-
-REM Step 4: Detect extra keys that exist in .env but not in sample.env
-for /f "tokens=1,* delims== eol=#" %%A in ('findstr /r "^[^#][^=]*=" "%TEMP_OLD%"') do (
-    set "envkey=%%A"
-    findstr /b /i "!envkey!=" "%TEMP_KEYS%" >nul
-    if errorlevel 1 (
-        echo !envkey!>>"%TEMP_EXTRA%"
-        echo ##### Keeping extra variable: !envkey!
-    )
-)
-
-REM Step 5: Append extra keys to the bottom of the file
-if exist "%TEMP_EXTRA%" (
-    >>"%TEMP_NEW%" echo.
-    >>"%TEMP_NEW%" echo # Extra variables kept from previous .env
-    for /f "usebackq delims=" %%X in ("%TEMP_EXTRA%") do (
-        for /f "tokens=1,* delims== eol=#" %%C in ('findstr /b /i "%%X=" "%TEMP_OLD%"') do (
-            >>"%TEMP_NEW%" echo %%X=%%D
-        )
-    )
-)
-
-REM Step 6: Replace old .env with formatted new one
-copy "%TEMP_NEW%" ".env" /Y >nul
-del "%TEMP_NEW%" "%TEMP_KEYS%" >nul 2>&1
-
-echo.
-if exist "%TEMP_EXTRA%" (
-    echo ============================================
-    echo [WARNING] The following variables exist in .env but not in sample.env:
-    type "%TEMP_EXTRA%"
-    echo ============================================
-) else (
-    echo No unmatched variables found.
-)
-del "%TEMP_EXTRA%" >nul 2>&1
-
-echo [OK] .env update complete (spacing, values, and extras preserved)
+echo [OK] All environment files processed
 echo ============================================
 pause
 exit /b
 
 
-REM -------------------------------------------------------------------
-REM Helper function :process_line
-REM Adds a blank line before comments for readability
-REM -------------------------------------------------------------------
-:process_line
-setlocal enabledelayedexpansion
-set "trim=!line: =!"
 
-if "!trim!"=="" (
+REM ==================================================
+REM sync_env
+REM %1 = sample file
+REM ==================================================
+:sync_env
+setlocal EnableDelayedExpansion
+
+set "SAMPLE_FILE=%~1"
+
+REM ----- derive target file safely -----
+if /i "%SAMPLE_FILE%"=="sample.env" (
+    set "TARGET_FILE=.env"
+) else (
+    set "TARGET_FILE=.env%SAMPLE_FILE:sample.env=%"
+)
+
+echo.
+echo --------------------------------------------
+echo Syncing %TARGET_FILE% from %SAMPLE_FILE%
+echo --------------------------------------------
+
+REM ----- temp files -----
+set "TEMP_NEW=%TARGET_FILE%.new"
+set "TEMP_KEYS=%TARGET_FILE%.keys"
+set "TEMP_EXTRA=%TARGET_FILE%.extra"
+set "TEMP_ADDED=%TARGET_FILE%.added"
+
+del "%TEMP_NEW%" "%TEMP_KEYS%" "%TEMP_EXTRA%" "%TEMP_ADDED%" >nul 2>&1
+
+REM ----- create target if missing -----
+if not exist "%TARGET_FILE%" (
+    echo %TARGET_FILE% not found. Creating from %SAMPLE_FILE%...
+    copy "%SAMPLE_FILE%" "%TARGET_FILE%" >nul
     endlocal
     goto :eof
 )
 
-if "!trim:~0,1!"=="#" (
+REM ----- process sample file -----
+for /f "usebackq delims=" %%L in (`findstr /n "^" "%SAMPLE_FILE%"`) do (
+    set "line=%%L"
+    set "line=!line:*:=!"
+    call :process_line "%TARGET_FILE%" "%TEMP_NEW%" "%TEMP_KEYS%" "%TEMP_ADDED%"
+)
+
+REM ----- detect extra keys -----
+for /f "tokens=1 delims==" %%A in (
+    'findstr /r "^[^#][^=]*=" "%TARGET_FILE%"'
+) do (
+    if not "%%A"=="" (
+        findstr /b /i "%%A=" "%TEMP_KEYS%" >nul
+        if errorlevel 1 (
+            echo %%A>>"%TEMP_EXTRA%"
+        )
+    )
+)
+
+REM ----- append extras -----
+if exist "%TEMP_EXTRA%" (
     >>"%TEMP_NEW%" echo.
-    >>"%TEMP_NEW%" echo !line!
+    >>"%TEMP_NEW%" echo # Extra variables kept from previous file
+    echo Extra variables kept from previous file:
+    for /f "usebackq delims=" %%X in ("%TEMP_EXTRA%") do (
+        for /f "tokens=1,* delims==" %%C in ('findstr /b /i "%%X=" "%TARGET_FILE%"') do (
+            >>"%TEMP_NEW%" echo %%C=%%D
+            echo   + %%C
+        )
+    )
+)
+
+REM ----- replace target -----
+copy "%TEMP_NEW%" "%TARGET_FILE%" /Y >nul
+
+if exist "%TEMP_ADDED%" (
+    echo.
+    echo New variables added to %TARGET_FILE%:
+    for /f "usebackq delims=" %%A in ("%TEMP_ADDED%") do (
+        echo   + %%A
+    )
+
+)
+
+del "%TEMP_NEW%" "%TEMP_KEYS%" "%TEMP_EXTRA%" "%TEMP_ADDED%" >nul 2>&1
+
+echo [OK] %TARGET_FILE% synced successfully
+endlocal
+goto :eof
+
+
+REM ==================================================
+REM process_line
+REM ==================================================
+:process_line
+setlocal EnableDelayedExpansion
+
+set "TARGET=%~1"
+set "OUT=%~2"
+set "KEYS=%~3"
+set "ADDED=%~4"
+
+REM blank line
+if "!line!"=="" (
+    >>"%OUT%" echo.
     endlocal
     goto :eof
 )
 
-REM Otherwise, it's a variable line
-for /f "tokens=1,* delims== eol=#" %%A in ("!line!") do (
+REM comment
+if "!line:~0,1!"=="#" (
+    >>"%OUT%" echo !line!
+    endlocal
+    goto :eof
+)
+
+REM key/value
+for /f "tokens=1,* delims==" %%A in ("!line!") do (
     set "key=%%A"
     set "value=%%B"
 )
 
-REM Save this key to TEMP_KEYS for later comparison
->>"%TEMP_KEYS%" echo !key!=
+if "!key!"=="" (
+    endlocal
+    goto :eof
+)
 
-REM Check if it already exists in .env
+>>"%KEYS%" echo !key!=
+
 set "existing="
-for /f "tokens=1,* delims== eol=#" %%C in ('findstr /b /i "!key!=" "%TEMP_OLD%"') do (
+for /f "tokens=1,* delims==" %%C in (
+    'findstr /b /i "!key!=" "%TARGET%"'
+) do (
     set "existing=%%D"
 )
 
 if defined existing (
-    echo Keeping existing: !key!
-    >>"%TEMP_NEW%" echo !key!=!existing!
+    >>"%OUT%" echo !key!=!existing!
 ) else (
-    echo Adding new variable: !key!
-    >>"%TEMP_NEW%" echo !key!=!value!
+    >>"%OUT%" echo !key!=!value!
+    >>"%ADDED%" echo !key!
 )
 
 endlocal

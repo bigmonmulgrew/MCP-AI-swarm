@@ -140,38 +140,53 @@ class FilterDrone(BaseDroneServer):
                 "model": "qwen2.5-coder:7b",
                 "options": {}
             }
-
-            json_response_red = None
-            try:
-                response = requests.post(API_URL, json=ai_payload_red, timeout = 120)
-                response.raise_for_status()
-                json_response_red = response.json()
-            except Exception as e:
-                print(e)
-
-            json_response_amber = None
-            try:
-                response = requests.post(API_URL, json=ai_payload_amber, timeout = 120)
-                response.raise_for_status()
-                json_response_amber = response.json()
-            except Exception as e:
-                print(e)
-
-            print(f"AI response (red): {json_response_red['result']['response']}")
-            print(f"AI response (amber): {json_response_amber['result']['response']}")
-
             structured_data = []
 
-            # Handle case where request failed
-            if json_response_red is None or 'result' not in json_response_red:
-                structured_data += []
-            else:
-                structured_data.append(parse_structured_msg([json_response_red['result']['response']]))
+            retry_count = 0
+            red_respone_parsed = False
+            amber_response_parsed = False
+            json_response_red = None
+            json_response_amber = None
+            while retry_count < 3 and (not red_respone_parsed or not amber_response_parsed):
+                
+                if not red_respone_parsed:
+                    try:
+                        response = requests.post(API_URL, json=ai_payload_red, timeout = 120)
+                        response.raise_for_status()
+                        json_response_red = response.json()
+                    except Exception as e:
+                        print(e)
 
-            if json_response_amber is  None and 'result' not in json_response_amber:
-                structured_data += []
-            else:
-                structured_data.append(parse_structured_msg([json_response_amber['result']['response']]))
+                if not amber_response_parsed:
+                    try:
+                        response = requests.post(API_URL, json=ai_payload_amber, timeout = 120)
+                        response.raise_for_status()
+                        json_response_amber = response.json()
+                    except Exception as e:
+                        print(e)
+
+                print(f"AI response (red): {json_response_red['result']['response']}")
+                print(f"AI response (amber): {json_response_amber['result']['response']}")
+
+            
+                # Handle case where request failed
+                if json_response_red is None or 'result' not in json_response_red:
+                    structured_data += []
+                else:
+                    try:
+                        structured_data.append(parse_structured_msg([json_response_red['result']['response']]))
+                        red_respone_parsed = True
+                    except Exception as e:
+                        retry_count += 1
+
+                if json_response_amber is  None and 'result' not in json_response_amber:
+                    structured_data += []
+                else:
+                    try:
+                        structured_data.append(parse_structured_msg([json_response_amber['result']['response']]))
+                        amber_response_parsed = True
+                    except Exception as e:
+                        retry_count += 1
             
             payload = Message(
                 role="bot",

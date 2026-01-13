@@ -127,31 +127,49 @@ class FilterDrone(BaseDroneServer):
                                     
                                     return filtered"""
 
-            ai_payload = {
-                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red filter (still just start the json with 'filters':). Here is the camera data for the filter: {dqo.MessageHistory['data_drone_response'].structuredMsg[0]}\n Output JSON only. Then, create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber filter (still just start the json with 'filters':). The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
+            ai_payload_red = {
+                "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red filter (still just start the json with 'filters':). Here is the camera data for the filter: {dqo.MessageHistory['data_drone_response'].structuredMsg[0]}\n Output JSON only. The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}.",
                 "model": "qwen2.5-coder:7b",
                 "options": {}
             }
 
+            ai_payload_amber = {
+                "prompt": f"Create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber filter (still just start the json with 'filters':). The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
+                "model": "qwen2.5-coder:7b",
+                "options": {}
+            }
 
-
-            json_response = None
+            json_response_red = None
             try:
-                response = requests.post(API_URL, json=ai_payload, timeout = 120)
+                response = requests.post(API_URL, json=ai_payload_red, timeout = 120)
                 response.raise_for_status()
-                json_response = response.json()
+                json_response_red = response.json()
             except Exception as e:
                 print(e)
 
+            json_response_amber = None
+            try:
+                response = requests.post(API_URL, json=ai_payload_amber, timeout = 120)
+                response.raise_for_status()
+                json_response_amber = response.json()
+            except Exception as e:
+                print(e)
 
-            print(f"AI response: {json_response['result']['response']}")
+            print(f"AI response (red): {json_response_red['result']['response']}")
+            print(f"AI response (amber): {json_response_amber['result']['response']}")
+
+            structured_data = []
 
             # Handle case where request failed
-            if json_response is None or 'result' not in json_response:
-                structured_data = []
+            if json_response_red is None or 'result' not in json_response_red:
+                structured_data += []
             else:
-                structured_data = parse_structured_msg([json_response['result']['response']])
+                structured_data += parse_structured_msg([json_response_red['result']['response']])
 
+            if json_response_amber is  None and 'result' not in json_response_amber:
+                structured_data += []
+            else:
+                structured_data += parse_structured_msg([json_response_amber['result']['response']])
             
             payload = Message(
                 role="bot",

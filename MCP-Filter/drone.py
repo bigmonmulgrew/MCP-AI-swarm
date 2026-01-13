@@ -143,13 +143,13 @@ class FilterDrone(BaseDroneServer):
             structured_data = []
 
             retry_count = 0
-            red_respone_parsed = False
+            red_response_parsed = False
             amber_response_parsed = False
             json_response_red = None
             json_response_amber = None
-            while retry_count < 3 and (not red_respone_parsed or not amber_response_parsed):
+            while retry_count < 5 and (not red_response_parsed or not amber_response_parsed):
                 
-                if not red_respone_parsed:
+                if not red_response_parsed:
                     try:
                         response = requests.post(API_URL, json=ai_payload_red, timeout = 120)
                         response.raise_for_status()
@@ -175,9 +175,10 @@ class FilterDrone(BaseDroneServer):
                 else:
                     try:
                         structured_data.append(parse_structured_msg([json_response_red['result']['response']]))
-                        red_respone_parsed = True
+                        red_response_parsed = True
                     except Exception as e:
                         retry_count += 1
+                        continue
 
                 if json_response_amber is  None and 'result' not in json_response_amber:
                     structured_data += []
@@ -187,6 +188,7 @@ class FilterDrone(BaseDroneServer):
                         amber_response_parsed = True
                     except Exception as e:
                         retry_count += 1
+                        continue
             
             payload = Message(
                 role="bot",

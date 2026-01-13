@@ -47,12 +47,14 @@ class FilterDrone(BaseDroneServer):
 
             epoch_times = []
 
-            for item in dqo.MessageHistory["domain_drone_response"].structuredMsg[0]["maintenance_period"].values():
+            for item in dqo.MessageHistory["domain_drone_response"].structuredMsg[0]["timestamp"].values():
                 date_time = item.split("-")
                 dt = datetime(int(date_time[0]), int(date_time[1]), int(date_time[2]), tzinfo=timezone.utc)
                 epoch_time = dt.timestamp()
                 epoch_times.append(epoch_time)
 
+
+            print(f"Epoch times: {epoch_times}")
             apply_plan_definition = """def apply_plan(rows: List[Row], plan: Dict[str, Any]) -> List[Row]:
                                     # Define comparison operators
                                     def op_eq(val, target): 
@@ -134,7 +136,7 @@ class FilterDrone(BaseDroneServer):
             }
 
             ai_payload_amber = {
-                "prompt": f"Create a JSON FilterPlan for: Identify records outside the maintenance period, defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber filter (still just start the json with 'filters':). The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
+                "prompt": f"Create a JSON FilterPlan for: Identify records outside the maintenance period, timestamp defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber filter (still just start the json with 'filters':). The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
                 "model": "qwen2.5-coder:7b",
                 "options": {}
             }

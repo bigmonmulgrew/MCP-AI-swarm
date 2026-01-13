@@ -7,6 +7,8 @@ import requests
 
 API_URL = "http://" + os.getenv("MCPS_HOST", "127.0.0.1") + ":" + os.getenv("MCPS_PORT", "8080") + "/ai-query"
 
+FILTER_MODEL = os.getenv("FILTER_MODEL", "qwen2.5-coder:7b")
+
 class FilterDrone(BaseDroneServer):
     def _register_subclass_endpoints(self):
         @self.app.post("/query")
@@ -131,13 +133,13 @@ class FilterDrone(BaseDroneServer):
 
             ai_payload_red = {
                 "prompt": f"Create a JSON FilterPlan for: Flag any record where both cameras are off. This is the red filter (still just start the json with 'filters':). Here is the camera data for the filter: {dqo.MessageHistory['data_drone_response'].structuredMsg[0]}\n Output JSON only. The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}.",
-                "model": "qwen2.5-coder:7b",
+                "model": FILTER_MODEL,
                 "options": {}
             }
 
             ai_payload_amber = {
                 "prompt": f"Create a JSON FilterPlan for: Identify records outside the maintenance period, timestamp defined as start={epoch_times[0]} and end={epoch_times[-1]}. This is the amber filter (still just start the json with 'filters':). The filter plan needs to work for the apply_plan function, which has the following function definition: {apply_plan_definition}. Output JSON only.",
-                "model": "qwen2.5-coder:7b",
+                "model": FILTER_MODEL,
                 "options": {}
             }
             structured_data = []

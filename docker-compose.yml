@@ -135,6 +135,7 @@ services:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
       - MCPS_HOST=${MCPS_HOST:-127.0.0.1}
       - MCPS_PORT=${MCPS_PORT_I:-8080}
+      - DOMAIN_MODEL=${DOMAIN_MODEL:-"qwen3:1.7b"}
     volumes:
       - ./MCP-Domain:/app    # live code mounting for dev
     depends_on:
@@ -152,6 +153,7 @@ services:
       - MCPS_HOST=${MCPS_HOST:-127.0.0.1}
       - MCPS_PORT=${MCPS_PORT_I:-8080}
       - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_I:-8060}
+      - FILTER_MODEL=${FILTER_MODEL:-"qwen2.5-coder:7b"}
     volumes:
       - ./MCP-Filter:/app    # live code mounting for dev
     depends_on:

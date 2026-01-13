@@ -1,6 +1,6 @@
-from drone import DataDrone
+from drone import VerdictDrone
 
-drone = DataDrone(
+drone = VerdictDrone(
     name="MCP Verdict server",
     category="Unstructured",
     env_host_key="MCP_VERDICT_HOST",

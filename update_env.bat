@@ -160,6 +160,14 @@ if "!line:~0,1!"=="#" (
     goto :eof
 )
 
+REM whitespace-only line
+for %%Z in ("!line!") do set "trim=%%~Z"
+if not defined trim (
+    >>"%OUT%" echo(
+    endlocal
+    goto :eof
+)
+
 REM key/value
 for /f "tokens=1,* delims==" %%A in ("!line!") do (
     set "key=%%A"
@@ -167,6 +175,12 @@ for /f "tokens=1,* delims==" %%A in ("!line!") do (
 )
 
 if "!key!"=="" (
+    endlocal
+    goto :eof
+)
+
+echo(!key!| findstr /r "^[A-Za-z_][A-Za-z0-9_]*$" >nul || (
+	>>"%OUT%" echo(
     endlocal
     goto :eof
 )
@@ -184,7 +198,9 @@ if defined existing (
     >>"%OUT%" echo !key!=!existing!
 ) else (
     >>"%OUT%" echo !key!=!value!
-    >>"%ADDED%" echo !key!
+    if defined key (
+		>>"%ADDED%" echo !key!
+	)
 )
 
 endlocal

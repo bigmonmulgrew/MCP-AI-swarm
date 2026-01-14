@@ -1,15 +1,32 @@
+import logging
+import json
+from common import setup_logging
+
 from fastapi import FastAPI
-from common import DroneOnlineObject, DroneQueryObject, UserQuery, BlocHubResponse   # Used items from common
+from common import DroneOnlineObject, DroneQueryObject, UserQuery, BlocHubResponse, AIQuery   # Used items from common
 from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                        # Bootstrapping placeholders to be removes
-from common import BOOT_BLOC_HUB_RESPONSE, BOOT_QUERY_RESPOSNE_01
+from common import BOOT_BLOC_HUB_RESPONSE, BOOT_QUERY_RESPOSNE_01, BOOT_SYSTEM_QUERY
 import requests
 import os
 from time import time
 
 app = FastAPI(title="Multi Cotext Protocol Server API is runnning")
 
+LOG_LEVEL="INFO"    # Valid levels CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+
+logger = logging.getLogger(__name__)
+setup_logging(LOG_LEVEL)
+
+logger.info("Starting Orcestration server (MCPS)")
+
 # AI queue connection info
 AI_QUEUE_URL = os.getenv("AI_QUEUE_URL", "http://ai-queue:9090")
+
+# Ollama settings
+OLLAMA_MODEL: str = os.getenv("OLLAMA_DEFAULT_MODEL", "llama3.2")
+OLLAMA_TEMP: float  = os.getenv("OLLAMA_DEFAULT_TEMP", 0.0)
+OLLAMA_MAX_TOKENS: int  = os.getenv("OLLAMA_MAX_TOKENS", 10000)
+OLLAMA_TIMEOUT: int  = os.getenv("OLLAMA_TIMEOUT", 300)
 
 # === Environment variables === TODO temporary
 MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
@@ -53,10 +70,7 @@ def process_user_query(data: UserQuery):
     """Endpoint for the user query or a hard coded system query.
     e.g. What are my risks?"""
 
-    response_data = BOOT_QUERY_RESPOSNE_01
-    
-    
-    return response_data
+    return BOOT_QUERY_RESPOSNE_01
 
 @app.get("/bloc-query")
 def process_bloc_query_get(verbose: bool = False):
@@ -65,19 +79,66 @@ def process_bloc_query_get(verbose: bool = False):
     """
     boot_response = BlocHubResponse(**BOOT_BLOC_HUB_RESPONSE)
 
+    system_query = BOOT_SYSTEM_QUERY
+    domain_data:str = ""
+    local_summary:str = ""
+    camera_summary: str = ""
+
+    system_prompt: str = f"""
+{system_query}
+
+## Domain data 
+This is a summary of laws, and rules relavant to this industry or process.
+{domain_data}
+## Domain Data Ends
+
+## Local data
+This is a collection of company policies, contract terms and local Standard Operating Procedures.
+{local_summary}
+## Local data Ends
+
+## Camera Data
+This is a timestamped log of the camera data
+{camera_summary}
+## Camera summary ends
+""".strip()
+
+    query_data = AIQuery(
+        prompt=system_prompt,
+        model=OLLAMA_MODEL,
+        temperature=OLLAMA_TEMP,
+        max_tokens=OLLAMA_MAX_TOKENS,
+        options = {}
+        
+    )
+
+    response = requests.post(
+        f"{AI_QUEUE_URL}/query", 
+        json=query_data.model_dump(mode="json"),
+        timeout=OLLAMA_TIMEOUT
+        )
+    
+    response.raise_for_status()
+    
+    queue_payload = response.json()
+    model_result = queue_payload["result"]
+    model_json = json.loads(model_result["response"])
+
+    logger.info(model_json)
+    
+    response_data = BlocHubResponse(
+        light_result=model_json.get("score"),
+        text_result=model_json.get("text_result", ""),
+        time=int(time()),
+    )
+    
     if verbose:
-        response_data = BlocHubResponse(
-            light_result = boot_response.light_result,
-            text_result = boot_response.text_result,
-            time = boot_response.time,
-            debug_data = boot_response.debug_data
-        )
-    else:
-        response_data = BlocHubResponse(
-            light_result = boot_response.light_result,
-            text_result = boot_response.text_result,
-            time = boot_response.time
-        )
+        debug_data = {
+            "domain_summary": domain_data,
+            "local_summary": local_summary,
+            "camera_summary": camera_summary
+        }
+        response_data.debug_data=debug_data
 
     return response_data
 
@@ -92,7 +153,6 @@ def process_ai_query(data: dict):
         return res.json()
     except requests.exceptions.RequestException as e:
         return {"error": "AI queue unreachable", "details": str(e)}
-
 
 # TODO debugging only after here. Used in dev and planned ot be removed
 @app.post("/query-stack")

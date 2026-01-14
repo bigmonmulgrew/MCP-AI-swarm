@@ -83,7 +83,7 @@ def process_bloc_query_get(verbose: bool = False):
 
     system_query = BOOT_SYSTEM_QUERY
     domain_data:str = "This factory contains hazardous materials, it would be a breach of the law if the site is unmonitored"
-    local_summary:str = "Monitoring will be by camera, at least one camera must be enabled "
+    local_summary:str = "Monitoring will be by camera, at least one camera must be enabled. In any case where two cameras are off this would mean a serious breach and high risk.."
     camera_summary: str = analyse_camera_data(CAM_DATA)
 
     system_prompt: str = f"""
@@ -100,7 +100,7 @@ This is a collection of company policies, contract terms and local Standard Oper
 ## Local data Ends
 
 ## Camera Data
-This is a timestamped log of the camera data
+This is a timestamped log of the camera data, any provided camera logs have one or more cameras offline and this represents an issue. Cross reference this with the other proivided data to determine adequate limits.
 {camera_summary}
 ## Camera summary ends
 """.strip()

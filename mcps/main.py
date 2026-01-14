@@ -2,10 +2,12 @@ import logging
 import json
 from common import setup_logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from common import DroneOnlineObject, DroneQueryObject, UserQuery, BlocHubResponse, AIQuery   # Used items from common
 from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                        # Bootstrapping placeholders to be removes
 from common import BOOT_BLOC_HUB_RESPONSE, BOOT_QUERY_RESPOSNE_01, BOOT_SYSTEM_QUERY
+from common import CAM_DATA
+from cam_test import analyse_camera_data
 import requests
 import os
 from time import time
@@ -24,9 +26,9 @@ AI_QUEUE_URL = os.getenv("AI_QUEUE_URL", "http://ai-queue:9090")
 
 # Ollama settings
 OLLAMA_MODEL: str = os.getenv("OLLAMA_DEFAULT_MODEL", "llama3.2")
-OLLAMA_TEMP: float  = os.getenv("OLLAMA_DEFAULT_TEMP", 0.0)
-OLLAMA_MAX_TOKENS: int  = os.getenv("OLLAMA_MAX_TOKENS", 10000)
-OLLAMA_TIMEOUT: int  = os.getenv("OLLAMA_TIMEOUT", 300)
+OLLAMA_TEMP: float = os.getenv("OLLAMA_DEFAULT_TEMP", 0.0)
+OLLAMA_MAX_TOKENS: int = os.getenv("OLLAMA_MAX_TOKENS", 10000)
+OLLAMA_TIMEOUT: int = os.getenv("OLLAMA_TIMEOUT", 300)
 
 # === Environment variables === TODO temporary
 MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
@@ -80,9 +82,9 @@ def process_bloc_query_get(verbose: bool = False):
     boot_response = BlocHubResponse(**BOOT_BLOC_HUB_RESPONSE)
 
     system_query = BOOT_SYSTEM_QUERY
-    domain_data:str = ""
-    local_summary:str = ""
-    camera_summary: str = ""
+    domain_data:str = "This factory contains hazardous materials, it would be a breach of the law if the site is unmonitored"
+    local_summary:str = "Monitoring will be by camera, at least one camera must be enabled "
+    camera_summary: str = analyse_camera_data(CAM_DATA)
 
     system_prompt: str = f"""
 {system_query}
@@ -103,6 +105,9 @@ This is a timestamped log of the camera data
 ## Camera summary ends
 """.strip()
 
+    logger.info("Printing full system prompt")
+    logger.info(system_prompt)
+    
     query_data = AIQuery(
         prompt=system_prompt,
         model=OLLAMA_MODEL,
@@ -121,9 +126,30 @@ This is a timestamped log of the camera data
     response.raise_for_status()
     
     queue_payload = response.json()
+    
+    logger.info("Printing returned payload")
+    logger.info(queue_payload)
+    
     model_result = queue_payload["result"]
+    
+    resp_text = model_result.get("response", "")
+    
+    try:
+        model_json = json.loads(resp_text)
+    except Exception as e:
+        # Return a 502 with useful debug info (truncated)
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "error": "Model returned non-JSON response",
+                "parse_error": str(e),
+                "raw_response_prefix": resp_text[:500],
+            },
+        )
+    
     model_json = json.loads(model_result["response"])
 
+    logger.info("Printing cleaned JSON")
     logger.info(model_json)
     
     response_data = BlocHubResponse(

@@ -5,7 +5,7 @@ Use the provided domain policies, local policies and supplied data sets to deter
 Score should be 
 High risk: 0 - Unacceptable situation given domain and local constraints 
 Medium Risk: 1 - Acceptable risk given domain and local constraints but issues need to be addressed. 
-Green: 2 - Everything is fine accdording to the domain and local constrains
+Low: 2 - Everything is fine accdording to the domain and local constrains
 
 If data sets are missing consider this a high or medium risk depending one the amount of data sources missing. Note this in the text result.
 

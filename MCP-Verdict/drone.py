@@ -42,13 +42,13 @@ class VerdictDrone(BaseDroneServer):
             # Amber = warning (maintenance period detected)
             # Green = all clear
             if len(red_matches) > 0:
-                verdict = "red"
+                verdict = 2
                 msg = f"CRITICAL: Found {len(red_matches)} instances where both cameras were off."
             elif len(amber_matches) > 0:
-                verdict = "amber"
+                verdict = 1
                 msg = f"WARNING: Found {len(amber_matches)} records outside maintenance period."
             else:
-                verdict = "green"
+                verdict = 0
                 msg = "All clear: No issues detected."
             
             payload = Message(
@@ -65,4 +65,6 @@ class VerdictDrone(BaseDroneServer):
                 Files = [],
                 Videos = []
             )
+
+            print(f"I AM A VERDICT: {payload.structuredMsg['verdict']}")
             return payload

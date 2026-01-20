@@ -30,10 +30,10 @@ def discover_python_services():
             services.append(child)
     return services
 
-def pip_path(venv_path):
-    """Return pip path depending on OS."""
+def python_path(venv_path):
+    """Return python executable path inside venv."""
     return str(
-        venv_path / ("Scripts/pip.exe" if os.name == "nt" else "bin/pip")
+        venv_path / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     )
 
 def activate_command(venv_path):
@@ -42,6 +42,13 @@ def activate_command(venv_path):
         return f"{venv_path}\\Scripts\\activate"
     else:
         return f"source {venv_path}/bin/activate"
+
+def venv_is_valid(venv_path):
+    """Check whether a venv looks usable."""
+    if os.name == "nt":
+        return (venv_path / "Scripts" / "python.exe").exists()
+    else:
+        return (venv_path / "bin" / "python").exists()
 
 # ---------------------------------------------------------
 # Environment Setup Logic
@@ -63,18 +70,25 @@ def setup_env(service_path):
     slow_print(f"\n=== Setting up environment for {name} ===")
 
     # 1. Create virtual environment
-    if not venv_path.exists():
-        run("python -m venv venv", cwd=service_path)
+    if not venv_is_valid(venv_path):
+        slow_print("venv missing or invalid — recreating")
+
+        # Remove broken venv if it exists
+        if venv_path.exists():
+            import shutil
+            shutil.rmtree(venv_path)
+
+        run("python -m venv venv --upgrade-deps", cwd=service_path)
         summary["venv_created"] = True
     else:
-        slow_print("venv already exists")
+        slow_print("venv exists and is valid")
     
-    pip = pip_path(venv_path)
+    python = python_path(venv_path)
 
     # 2. Install common package if present
     common_path = ROOT / "common"
     if common_path.exists():
-        run(f"{pip} install -e {common_path}")
+        run(f'"{python}" -m pip install -e "{common_path}"')
         summary["common_installed"] = True
     else:
         slow_print("WARNING: common package not found!")
@@ -82,12 +96,12 @@ def setup_env(service_path):
     # 3. Install service requirements
     req_file = service_path / "requirements.txt"
     if req_file.exists():
-        run(f"{pip} install -r requirements.txt", cwd=service_path)
+        run(f'"{python}" -m pip install -r requirements.txt', cwd=service_path)
         summary["requirements_installed"] = True
 
     # 4. Output freeze file
     freeze_file = service_path / "requirements_freeze.txt"
-    result = subprocess.check_output(f"{pip} freeze", cwd=service_path, shell=True).decode()
+    result = subprocess.check_output(f'"{python}" -m pip freeze',cwd=service_path,shell=True).decode()
     freeze_file.write_text(result)
     summary["freeze_written"] = True
 

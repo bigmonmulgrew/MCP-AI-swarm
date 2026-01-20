@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Union
+from typing import Optional, Any, Dict, List, Union
 
 class SenderHistory(BaseModel):
     Hostname: List[str] # For debugging, allows a trace route of MCP drones
@@ -58,4 +58,18 @@ class AIQuery(BaseModel):
     max_tokens: int = Field(
         10000, description="Token limit for the AI model. Can be used to help truncate messages or long requests"
     )
-    
+
+class BlocHubResponse(BaseModel):
+    light_result: int = Field(
+        description="The final result to send to bloc hub formatted as a json string. Red: 0, Amber: 1, Green: 2"
+    )
+    text_result: str = Field(
+        description="Short advisory text sumamrising the results"
+    )
+    time: int = Field(
+        description="The generation time of the response in UTC"
+    )
+    debug_data: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Data used in reasoning. Only provided when verbose=true"
+    )

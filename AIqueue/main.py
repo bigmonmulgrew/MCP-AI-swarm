@@ -103,7 +103,7 @@ if __name__ == "__main__":
     from config import OLLAMA_DEBUG_URL
 
     # Override environment value for local testing
-    global OLLAMA_URL
+    
     OLLAMA_URL = OLLAMA_DEBUG_URL
     print(f"[AIQ] Using DEBUG OLLAMA URL: {OLLAMA_URL}")
 

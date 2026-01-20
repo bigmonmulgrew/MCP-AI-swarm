@@ -27,3 +27,7 @@ document.getElementById("callBtnUserQuery").addEventListener("click", () =>
 document.getElementById("callBtnUserQueryStack").addEventListener("click", () =>
   callAPI("/call-user-query-stack", "out4")
 );
+
+document.getElementById("callBtnVerdict").addEventListener("click", () =>
+  callAPI("/call-verdict", "out5")
+);

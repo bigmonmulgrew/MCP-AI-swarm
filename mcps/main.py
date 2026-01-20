@@ -3,7 +3,7 @@ import json
 from common import setup_logging
 
 from fastapi import FastAPI, HTTPException
-from common import DroneOnlineObject, DroneQueryObject, UserQuery, BlocHubResponse, AIQuery   # Used items from common
+from common import DroneOnlineObject, DroneQueryObject, UserQuery, Message, BlocHubResponse, AIQuery   # Used items from common
 from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                        # Bootstrapping placeholders to be removes
 from common import BOOT_BLOC_HUB_RESPONSE, BOOT_QUERY_RESPOSNE_01, BOOT_SYSTEM_QUERY
 from common import CAM_DATA
@@ -33,6 +33,9 @@ OLLAMA_TIMEOUT: int = os.getenv("OLLAMA_TIMEOUT", 300)
 # === Environment variables === TODO temporary
 MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
 MCP_VISUALISER_URL = os.getenv("MCP_VISUALISER_URL", "http://mcp-visualiser:8070")
+MCP_VERDICT_URL = os.getenv("MCP_VERDICT_URL", "http://mcp-verdict:8050")
+MCP_DOMAIN_URL = os.getenv("MCP_DOMAIN_URL", "http://mcp-domain:8040")
+MCP_FILTER_URL = os.getenv("MCP_FILTER_URL", "http://mcp-filter:8030")
 
 @app.get("/")
 def read_root():
@@ -172,6 +175,22 @@ This is a timestamped log of the camera data, any provided camera logs have one 
 def process_ai_query(data: dict):
     """
     Explicit endpoint for intentional AI requests.
+
+    Example usage within MCP-Domain/drone.py:
+    # API_URL = "http://" + os.getenv("MCPS_HOST", "127.0.0.1") + ":" + os.getenv("MCPS_PORT", "8080") + "/ai-query"
+
+    # ai_payload = {
+    #                 "prompt": "tell me about lightning mcqueen",
+    #                 "model": "qwen3:1.7b",
+    #                 "options": {}
+    #             }
+
+    #             try:
+    #                 response = requests.post(API_URL, json=ai_payload, timeout = 120)
+    #                 response.raise_for_status()
+    #                 print(response.json())
+    #             except Exception as e:
+    #                 print(e)
     """
     try:
         res = requests.post(f"{AI_QUEUE_URL}/query", json=data)
@@ -206,7 +225,7 @@ def process_user_query_stack(data: UserQuery):
         res_data.raise_for_status()
         data_json = res_data.json()
         msg = data_json.get("Msg", msg)
-        structured_msgs = data_json.get("stucturedMsg", [])
+        structured_msgs = data_json.get("structuredMsg", [])
         print(f"[MCPS] Data MCP responded with msg: {msg}")
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Data MCP: {e}")
@@ -239,3 +258,107 @@ def process_user_query_stack(data: UserQuery):
     }
 
     return response_data
+
+@app.post("/debug-verdict")
+def debug_verdict(data: UserQuery):
+    """Debug endpoint to simulate verdict processing."""
+    dqo = DroneQueryObject(
+        Query=data.query,
+        RecursionDepth=1,
+        OriginalSPrompt="You are a helpful AI assistant.",
+        MessageHistory={},
+        CurrentTime=time(),
+    )
+
+    try:
+        print(f"[MCPS] Calling Data MCP: {MCP_DATA_URL}/query")
+        res_data = requests.post(f"{MCP_DATA_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_data.raise_for_status()
+        data_json = res_data.json()
+
+        
+
+        # Inject response back into dqo for further processing
+        dqo.MessageHistory ["data_drone_response"] = data_json
+        print(dqo.MessageHistory)
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Data MCP: {e}")
+
+    try:
+        print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_URL}/query")
+        res_domain = requests.post(f"{MCP_DOMAIN_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_domain.raise_for_status()
+        domain_json = res_domain.json()
+
+        dqo.MessageHistory ["domain_drone_response"] = domain_json
+        print(dqo.MessageHistory)
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Domain MCP: {e}")
+
+    try:
+        print(f"[MCPS] Calling Filter MCP: {MCP_FILTER_URL}/query")
+        res_filter = requests.post(f"{MCP_FILTER_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_filter.raise_for_status()
+        filter_json = res_filter.json()
+
+        dqo.MessageHistory ["filter_drone_response"] = filter_json
+        print(dqo.MessageHistory)
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Filter MCP: {e}")
+
+    try:
+        print(f"[MCPS] Calling Verdict MCP: {MCP_VERDICT_URL}/query")
+        res_verdict = requests.post(f"{MCP_VERDICT_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_verdict.raise_for_status()
+        verdict_json = res_verdict.json()
+        dqo.MessageHistory["verdict_drone_response"] = verdict_json
+        print(dqo.MessageHistory)
+        return dqo
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Verdict Drone: {e}")
+        return {"error": "Verdict Drone unreachable"}
+        
+@app.post("/debug-domain")
+def debug_domain(data: UserQuery):
+    """Debug endpoint to simulate domain processing."""
+    dqo = DroneQueryObject(
+        Query=data.query,
+        RecursionDepth=1,
+        OriginalSPrompt="You are a helpful AI assistant.",
+        MessageHistory={},
+        CurrentTime=time(),
+    )
+
+    try:
+        print(f"[MCPS] Calling Domain Drone")
+        res_domain = requests.post(f"http://mcp-domain:8040/query", json=dqo.model_dump(mode = "json"))
+        res_domain.raise_for_status()
+        domain_json = res_domain.json()
+        dqo.MessageHistory["domain_drone_response"] = domain_json
+        return dqo
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Domain Drone: {e}")
+        return {"error": "Domain Drone unreachable"}
+    
+    
+@app.post("/debug-filter")
+def debug_filter(data: UserQuery):
+    """Debug endpoint to simulate filter processing."""
+    dqo = DroneQueryObject(
+        Query=data.query,
+        RecursionDepth=1,
+        OriginalSPrompt="You are a helpful AI assistant.",
+        MessageHistory={},
+        CurrentTime=time(),
+    )
+
+    try:
+        print(f"[MCPS] Calling Filter Drone")
+        res_filter = requests.post(f"http://mcp-filter:8030/query", json=dqo.model_dump(mode = "json"))
+        res_filter.raise_for_status()
+        filter_json = res_filter.json()
+        dqo.MessageHistory["filter_drone_response"] = filter_json
+        return dqo
+    except requests.exceptions.RequestException as e:
+        print(f"[MCPS] Error calling Filter Drone: {e}")
+        return {"error": "Filter Drone unreachable"}

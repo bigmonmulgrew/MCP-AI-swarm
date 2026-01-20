@@ -5,9 +5,9 @@ class VisualiserDrone(BaseDroneServer):
     def _register_subclass_endpoints(self):
         @self.app.post("/query")
         async def handle_query(dqo: DroneQueryObject):
-            MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
+            
             print(f"Received query: {dqo.Query}")
-
+            MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
             try:
                 res = requests.post(f"{MCP_DATA_URL}/query", json=dqo.dict())
                 res.raise_for_status()

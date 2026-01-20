@@ -66,6 +66,7 @@ services:
       - AI_QUEUE_URL=http://${AI_QUEUE_HOST:-ai-queue}:${AI_QUEUE_PORT_E:-9090}
       - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_E:-8060}
       - MCP_VISUALISER_URL=http://${MCP_VISUALISER_HOST:-mcp-data}:${MCP_VISUALISER_PORT_E:-8060}
+      - MCP_VERDICT_URL=http://${MCP_VERDICT_HOST:-mcp-verdict}:${MCP_VERDICT_PORT_E:-8050}
     volumes:
       - ./mcps:/app   # live code mounting for dev
     depends_on:
@@ -106,7 +107,7 @@ services:
     depends_on:
       - ollama
     restart: unless-stopped
-
+  
   mcp-verdict:
     build:
       context: .
@@ -120,4 +121,41 @@ services:
       - MCPS_PORT=${MCPS_PORT_I:-8080}
     volumes:
       - ./MCP-Verdict:/app    # live code mounting for dev
+    depends_on:
+      - ollama
+    restart: unless-stopped
+  mcp-domain:
+    build:
+      context: .
+      dockerfile: ./MCP-Domain/Dockerfile
+    container_name: mcp-domain-container
+    ports:
+      - "${MCP_DOMAIN_PORT_E:-8040}:${MCP_DOMAIN_PORT_I:-8040}"
+    environment:
+      - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - MCPS_HOST=${MCPS_HOST:-127.0.0.1}
+      - MCPS_PORT=${MCPS_PORT_I:-8080}
+      - DOMAIN_MODEL=${DOMAIN_MODEL:-"qwen3:1.7b"}
+    volumes:
+      - ./MCP-Domain:/app    # live code mounting for dev
+    depends_on:
+      - ollama
+    restart: unless-stopped
+  mcp-filter:
+    build:
+      context: .
+      dockerfile: ./MCP-Filter/Dockerfile
+    container_name: mcp-filter-container
+    ports:
+      - "${MCP_FILTER_PORT_E:-8030}:${MCP_FILTER_PORT_I:-8030}"
+    environment:
+      - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      - MCPS_HOST=${MCPS_HOST:-127.0.0.1}
+      - MCPS_PORT=${MCPS_PORT_I:-8080}
+      - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_I:-8060}
+      - FILTER_MODEL=${FILTER_MODEL:-"qwen2.5-coder:7b"}
+    volumes:
+      - ./MCP-Filter:/app    # live code mounting for dev
+    depends_on:
+      - ollama
     restart: unless-stopped

@@ -275,6 +275,7 @@ def debug_verdict(data: UserQuery):
         CurrentTime=time(),
     )
 
+    ##################
     try:
         print(f"[MCPS] Calling Data MCP: {MCP_DATA_URL}/query")
         res_data = requests.post(f"{MCP_DATA_URL}/query", json=dqo.model_dump(mode = "json"))
@@ -285,10 +286,12 @@ def debug_verdict(data: UserQuery):
 
         # Inject response back into dqo for further processing
         dqo.MessageHistory ["data_drone_response"] = data_json
-        print(dqo.MessageHistory)
+        #print(dqo.MessageHistory)
+        logger.info(dqo.MessageHistory)
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Data MCP: {e}")
 
+    ##################
     try:
         print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_URL}/query")
         res_domain = requests.post(f"{MCP_DOMAIN_URL}/query", json=dqo.model_dump(mode = "json"))
@@ -300,6 +303,7 @@ def debug_verdict(data: UserQuery):
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Domain MCP: {e}")
 
+    ##################
     try:
         print(f"[MCPS] Calling Filter MCP: {MCP_FILTER_URL}/query")
         res_filter = requests.post(f"{MCP_FILTER_URL}/query", json=dqo.model_dump(mode = "json"))
@@ -311,6 +315,7 @@ def debug_verdict(data: UserQuery):
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Filter MCP: {e}")
 
+    ##################
     try:
         print(f"[MCPS] Calling Verdict MCP: {MCP_VERDICT_URL}/query")
         res_verdict = requests.post(f"{MCP_VERDICT_URL}/query", json=dqo.model_dump(mode = "json"))

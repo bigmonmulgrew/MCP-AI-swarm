@@ -124,6 +124,7 @@ This is a timestamped log of the camera data, any provided camera logs have one 
         
     )
 
+    logger.info("Main: Sending query to AI backend")
     response = requests.post(
         f"{AI_QUEUE_URL}/query", 
         json=query_data.model_dump(mode="json"),

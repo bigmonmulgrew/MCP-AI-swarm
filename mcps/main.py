@@ -1,10 +1,13 @@
 import logging
 import json
+import requests
+import os
+
 from common import setup_logging
 
 from fastapi import FastAPI, HTTPException
-from common import DroneOnlineObject, DroneQueryObject, UserQuery, Message, BlocHubResponse, AIQuery   # Used items from common
-from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                        # Bootstrapping placeholders to be removes
+from common import DroneOnlineObject, DroneQueryObject, UserQuery, BlocHubResponse, AIQuery   # Used items from common
+from common import BOOT_MCPS_ONLINE_RESPONSE as ONLINE_RESPONSE                                 # Bootstrapping placeholders to be removes
 from common import BOOT_BLOC_HUB_RESPONSE, BOOT_QUERY_RESPOSNE_01, BOOT_SYSTEM_QUERY
 from common import CAM_DATA
 from cam_test import analyse_camera_data
@@ -22,7 +25,8 @@ setup_logging(LOG_LEVEL)
 logger.info("Starting Orcestration server (MCPS)")
 
 # AI queue connection info
-AI_QUEUE_URL = os.getenv("AI_QUEUE_URL", "http://ai-queue:9090")
+#AI_QUEUE_URL = os.getenv("AI_QUEUE_URL", "http://ai-queue:9090")
+AI_QUEUE_URL = "http://ai-queue:9090"
 
 # Ollama settings
 OLLAMA_MODEL: str = os.getenv("OLLAMA_DEFAULT_MODEL", "llama3.2")

@@ -14,6 +14,7 @@ from cam_test import analyse_camera_data
 import requests
 import os
 from time import time
+from datetime import datetime, timezone
 
 app = FastAPI(title="Multi Cotext Protocol Server API is runnning")
 
@@ -322,8 +323,13 @@ def debug_verdict(data: UserQuery):
         res_verdict.raise_for_status()
         verdict_json = res_verdict.json()
         dqo.MessageHistory["verdict_drone_response"] = verdict_json
-        print(dqo.MessageHistory)
-        return dqo
+        print(dqo.MessageHistory["verdict_drone_response"]["structuredMsg"]["verdict"])
+        # returning in the object format specified by Harry
+        blocject = {
+            "timestamp": datetime.now(timezone.utc).timestamp(),
+            "verdict": dqo.MessageHistory["verdict_drone_response"]["structuredMsg"]["verdict"]
+        }
+        return blocject
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Verdict Drone: {e}")
         return {"error": "Verdict Drone unreachable"}

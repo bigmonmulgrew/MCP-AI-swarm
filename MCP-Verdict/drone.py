@@ -67,4 +67,5 @@ class VerdictDrone(BaseDroneServer):
             )
 
             print(f"I AM A VERDICT: {payload.structuredMsg['verdict']}")
+            
             return payload

@@ -329,6 +329,7 @@ def debug_verdict(data: UserQuery):
             "timestamp": datetime.now(timezone.utc).timestamp() * 1000,
             "verdict": dqo.MessageHistory["verdict_drone_response"]["structuredMsg"]["verdict"]
         }
+        logger.info(f"[MCPS] Verdict blocject: {dqo.MessageHistory['verdict_drone_response']['structuredMsg']}")
         return blocject
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Verdict Drone: {e}")

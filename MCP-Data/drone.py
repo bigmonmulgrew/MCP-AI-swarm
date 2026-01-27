@@ -23,9 +23,10 @@ class DataDrone(BaseDroneServer):
                 last_query_time = datetime.now(timezone.utc) - timedelta(minutes=10)  # Default to last 10 minutes
                 last_query_time = last_query_time.timestamp() * 1000  # Convert to milliseconds
 
+            time_now_ms = datetime.now(timezone.utc).timestamp() * 1000
             url = ENDPOINT
 
-            print(f"Querying data from {last_query_time} to {datetime.now(timezone.utc).timestamp()}")
+            print(f"Querying data from {last_query_time} to {time_now_ms}")
             payload = json.dumps({
             "id": DATA_ID,
             "variables": [
@@ -37,7 +38,7 @@ class DataDrone(BaseDroneServer):
                 "mode": "between",
                 "value": [
                 last_query_time,
-                datetime.now(timezone.utc).timestamp()
+                time_now_ms
                 ]
             }
             })
@@ -79,5 +80,5 @@ class DataDrone(BaseDroneServer):
             )
 
             # Update last query time
-            last_query_time = datetime.now(timezone.utc).timestamp()
+            last_query_time = time_now_ms
             return payload

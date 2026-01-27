@@ -1,6 +1,8 @@
 # environment variables
 # see sample.env for defaults
 .env
+.env*
+!sample.env*
 
 # Ignore virtual environment
 venv/

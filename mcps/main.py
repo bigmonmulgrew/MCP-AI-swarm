@@ -265,6 +265,7 @@ def process_user_query_stack(data: UserQuery):
 
     return response_data
 
+# endpoint to use for blochub demo!!!!!
 @app.post("/debug-verdict")
 def debug_verdict(data: UserQuery):
     """Debug endpoint to simulate verdict processing."""

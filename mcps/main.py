@@ -326,7 +326,7 @@ def debug_verdict(data: UserQuery):
         print(dqo.MessageHistory["verdict_drone_response"]["structuredMsg"]["verdict"])
         # returning in the object format specified by Harry
         blocject = {
-            "timestamp": datetime.now(timezone.utc).timestamp(),
+            "timestamp": datetime.now(timezone.utc).timestamp() * 1000,
             "verdict": dqo.MessageHistory["verdict_drone_response"]["structuredMsg"]["verdict"]
         }
         return blocject

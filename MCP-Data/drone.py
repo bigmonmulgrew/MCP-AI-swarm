@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 import os
 
@@ -9,14 +9,23 @@ TOKEN = os.getenv("BLOC_TOKEN", None)
 ENDPOINT = os.getenv("BLOC_ENDPOINT", None)
 DATA_ID = os.getenv("BLOC_DATA_ID", None)
 
+last_query_time = None
+
 class DataDrone(BaseDroneServer):
     def _register_subclass_endpoints(self):
         @self.app.post("/query")
         async def handle_query(dqo: DroneQueryObject):
             print(f"Received query: {dqo.Query}")
 
+            global last_query_time
+            # Use global last_query_time to track the last time data was queried
+            if not last_query_time:
+                last_query_time = datetime.now(timezone.utc) - timedelta(minutes=10)  # Default to last 10 minutes
+                last_query_time = last_query_time.timestamp() * 1000  # Convert to milliseconds
+
             url = ENDPOINT
 
+            print(f"Querying data from {last_query_time} to {datetime.now(timezone.utc).timestamp()}")
             payload = json.dumps({
             "id": DATA_ID,
             "variables": [
@@ -27,8 +36,8 @@ class DataDrone(BaseDroneServer):
             "indexFilter": {
                 "mode": "between",
                 "value": [
-                1768982280630,
-                1768982580630
+                last_query_time,
+                datetime.now(timezone.utc).timestamp()
                 ]
             }
             })
@@ -68,4 +77,7 @@ class DataDrone(BaseDroneServer):
                 Files = [],
                 Videos = []
             )
+
+            # Update last query time
+            last_query_time = datetime.now(timezone.utc).timestamp()
             return payload

@@ -36,15 +36,28 @@ class DataDrone(BaseDroneServer):
             'token': TOKEN,
             'Content-Type': 'application/json'
             }
-
-            response = requests.request("POST", url, headers=headers, data=payload)
-
-            print(response.text)
-
+            
+            try:
+                response = requests.request("POST", url, headers=headers, data=payload)
+            except Exception as error:
+                print(f"Error during request: {error}")
+                return Message(
+                    role="bot",
+                    Msg="Error retrieving camera data.",
+                    Images=[],
+                    structuredMsg=[],
+                    Files=[],
+                    Videos=[]
+                )
+            
+            cam_data = response.json()
+            source = cam_data["source"]
 
             normalized_camera_data = [
+                # {"timestamp": ts, "cam1": c1, "cam2": c2}
+                # for ts, c1, c2 in CAM_DATA
                 {"timestamp": ts, "cam1": c1, "cam2": c2}
-                for ts, c1, c2 in CAM_DATA
+                for ts, c1, c2 in source
             ]
             
             payload = Message(

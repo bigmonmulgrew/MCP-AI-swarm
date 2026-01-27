@@ -1,5 +1,4 @@
-from time import timezone
-from datetime import datetime
+from datetime import datetime, timezone
 from common import DroneQueryObject, BaseDroneServer, Message, apply_plan
 from pathlib import Path
 

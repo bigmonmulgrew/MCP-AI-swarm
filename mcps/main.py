@@ -265,6 +265,7 @@ def process_user_query_stack(data: UserQuery):
 
     return response_data
 
+# endpoint to use for blochub demo!!!!!
 @app.post("/debug-verdict")
 def debug_verdict(data: UserQuery):
     """Debug endpoint to simulate verdict processing."""
@@ -329,6 +330,7 @@ def debug_verdict(data: UserQuery):
             "timestamp": datetime.now(timezone.utc).timestamp() * 1000,
             "verdict": dqo.MessageHistory["verdict_drone_response"]["structuredMsg"]["verdict"]
         }
+        logger.info(f"[MCPS] Verdict blocject: {dqo.MessageHistory['verdict_drone_response']['structuredMsg']}")
         return blocject
     except requests.exceptions.RequestException as e:
         print(f"[MCPS] Error calling Verdict Drone: {e}")

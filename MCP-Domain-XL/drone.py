@@ -1,8 +1,23 @@
-import requests
-from common import DroneQueryObject, BaseDroneServer, Message, parse_structured_msg
+import io
 import os
+import requests
+import asyncio
+import logging
 
-API_URL = "http://" + os.getenv("MCPS_HOST", "127.0.0.1") + ":" + os.getenv("MCPS_PORT", "8080") + "/ai-query"
+from common import DroneQueryObject, BaseDroneServer, Message, parse_structured_msg
+from fastapi import HTTPException, UploadFile, File
+from fastapi.responses import StreamingResponse
+from neo4j import GraphDatabase
+from helpers.process_document import process_document
+from helpers.chunk_text import chunk_text
+from helpers.embed_text import embed_text
+
+# environment settings
+NEO4J_URI = "bolt://neo4j-db-container"
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+
+MCPS_API_URL = "http://" + os.getenv("MCPS_HOST", "127.0.0.1") + ":" + os.getenv("MCPS_PORT", "8080") + "/ai-query"
 
 DOMAIN_MODEL = os.getenv("DOMAIN_MODEL", "qwen3:1.7b")
 
@@ -37,7 +52,7 @@ class DomainDrone(BaseDroneServer):
 
             json_response = None
             try:
-                response = requests.post(API_URL, json=ai_payload, timeout = 120)
+                response = requests.post(MCPS_API_URL, json=ai_payload, timeout = 120)
                 response.raise_for_status()
                 json_response = response.json()
             except Exception as e:
@@ -59,6 +74,154 @@ class DomainDrone(BaseDroneServer):
             )
             return payload
     
-    # Add custom methods below
-    # def custom_method(self):
-    #     pass
+        # upload document, process and transform to knowledge graph data
+        @self.app.post("/documents")
+        async def post_documents(file: UploadFile = File(...)):
+            """
+            Uploads a PDF file, extracts text using `process_document()`, stores chunked text with vectors in Neo4j.
+            Ensures each chunk has a globally unique ID and is linked correctly only within its document.
+            """
+            if not file:
+                raise HTTPException(status_code=400, detail="File is required")
+
+            # Validate file type
+            allowed_extensions = ["pdf", "docx", "txt", "xlsx"]
+            file_extension = file.filename.split(".")[-1].lower()
+            if file_extension not in allowed_extensions:
+                raise HTTPException(status_code=415, detail="Unsupported file type")
+
+            # Read file content
+            file_content = await file.read()
+            if not file_content:
+                raise HTTPException(status_code=400, detail="File is empty or unreadable")
+
+            try:
+                # Generate a unique document ID
+                document_id = file.filename.split(".")[0]  # Use filename as document ID
+
+                # Call `process_document()` to extract text from PDF
+                processed_data = process_document(file_content, file_extension,in_file_name=file.filename)
+                if not processed_data:
+                    raise HTTPException(
+                        status_code=500, detail="Error processing PDF: no content extracted"
+                    )
+
+                # Chunk the extracted text
+                chunks = chunk_text(processed_data)
+
+                # Generate vector embeddings
+                chunk_embeddings = embed_text(chunks)
+
+                # Store in Neo4j
+                with GraphDatabase.driver(
+                    NEO4J_URI, auth=(NEO4J_USER, NEO4J_PASSWORD)
+                ) as driver:
+                    with driver.session() as session:
+                        for i, chunk in enumerate(chunks):
+                            unique_chunk_id = f"{document_id}_{i}"
+                            
+                            cleanliness = cleanliness_score(chunk)
+                            
+                            session.run(
+                                """
+                                CREATE (c:Chunk {
+                                    chunk_id: $chunk_id,
+                                    document_id: $document_id,
+                                    text: $text,
+                                    vector: $vector,
+                                    cleanliness: $cleanliness
+                                })
+                                """,
+                                chunk_id=unique_chunk_id,
+                                document_id=document_id,
+                                text=chunk,
+                                vector=chunk_embeddings[i],
+                                cleanliness=cleanliness,
+                            )
+
+                            if i > 0:
+                                prev_chunk_id = f"{document_id}_{i - 1}"
+                                session.run(
+                                    """
+                                    MATCH (c1:Chunk {chunk_id: $chunk1, document_id: $document_id}),
+                                        (c2:Chunk {chunk_id: $chunk2, document_id: $document_id})
+                                    CREATE (c1)-[:NEXT]->(c2)
+                                    """,
+                                    chunk1=prev_chunk_id,
+                                    chunk2=unique_chunk_id,
+                                    document_id=document_id,
+                                )
+
+                return {
+                    "message": f"Document '{file.filename}' processed and stored in Neo4j.",
+                    "document_id": document_id,
+                    "total_chunks": len(chunks),
+                }
+
+            except Exception as e:
+                logging.error(f"Error processing PDF: {e}")
+                raise HTTPException(
+                    status_code=500, detail=f"Internal error during processing: {e}"
+                )
+
+
+        @self.app.get("/batch")
+        async def process_batch():
+            """
+            Processes all files in the 'batch' folder by sending them one at a time to the '/documents' endpoint.
+            Deletes each file after successful processing and streams real-time progress updates.
+            """
+            batch_folder = "batch"
+
+            # Ensure the batch folder exists
+            if not os.path.exists(batch_folder):
+                raise HTTPException(status_code=400, detail="Batch folder does not exist.")
+
+            files = [
+                f
+                for f in os.listdir(batch_folder)
+                if os.path.isfile(os.path.join(batch_folder, f))
+            ]
+
+            if not files:
+                raise HTTPException(
+                    status_code=400, detail="No files to process in the batch folder."
+                )
+
+            total_files = len(files)
+
+            async def process_files():
+                for idx, filename in enumerate(files, start=1):
+                    file_path = os.path.join(batch_folder, filename)
+
+                    try:
+                        with open(file_path, "rb") as file:
+                            file_content = file.read()
+                            file_like = io.BytesIO(
+                                file_content
+                            )  # Convert bytes into a file-like object
+
+                            file_upload = UploadFile(filename=filename, file=file_like)
+
+                            # Send file to /documents endpoint
+                            response = await post_documents(file_upload)
+
+                            # Delete the file after successful processing
+                            os.remove(file_path)
+
+                            yield f'data: {{"file": "{filename}", "status": "processed", "progress": "{idx} of {total_files}"}}\n\n'
+
+                        # Simulate a small delay (optional, for better streaming effect)
+                        await asyncio.sleep(0.5)
+
+                    except Exception as e:
+                        logging.error(f"Error processing file {filename}: {e}")
+                        yield f'data: {{"file": "{filename}", "status": "failed: {str(e)}", "progress": "{idx} of {total_files}"}}\n\n'
+
+                yield f'data: {{"message": "Batch processing completed."}}\n\n'
+
+            return StreamingResponse(process_files(), media_type="text/event-stream")
+
+        def cleanliness_score(text: str):
+            valid = sum(c.isalnum() or c.isspace() or c in ".,;:-()" for c in text)
+            return valid / max(len(text), 1)

@@ -24,8 +24,8 @@ class DomainDrone(BaseDroneServer):
             json_format = """{
                 "law": "All storage sites (of dangerous materials) must be constantly monitored",
                 "timestamp": {
-                    "start_date": "2025-12-01",
-                    "end_date": "2026-11-30"
+                    "start_date": "yyyy-mm-dd",
+                    "end_date": "yyyy-mm-dd"
                 }
             }"""
 

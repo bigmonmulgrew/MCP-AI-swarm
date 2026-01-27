@@ -60,6 +60,7 @@ services:
       - ./neo4j-db/import:/import # Directory for importing files
       - ./neo4j-db/plugins:/plugins # Directory for plugins
     restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
@@ -177,4 +178,59 @@ services:
       - ./MCP-Filter:/app    # live code mounting for dev
     depends_on:
       - ollama
+    restart: unless-stopped
+  mcp-domain-xl:
+    image: api-service
+  # Implementation of the domain data drone that uses a neo4j Database to allow large amounts of domain data 
+    build:
+      context: .
+      dockerfile: ./MCP-Domain-XL/Dockerfile
+    container_name: mcp-domain-xl-container
+    ports:
+      - "${MCP_DOMAIN_XL_PORT_E:-8041}:${MCP_DOMAIN_XL_PORT_I:-8041}"
+    # Note loading env_file variables is not supported for docker-compose variables via GUI and will be internal only
+    env_file:  
+      - ./.env.emiz 
+    environment:
+      NEO4J_URI: "bolt://neo4j-db-container:${DATABASE_BOLT_PORT_I:-7687}" # Neo4j connection string
+      NEO4J_USER: ${NEO4J_USER}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      CUDA_VISIBLE_DEVICES: "0"
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      LLM_LOCATION_ENV: ${LLM_LOCATION_ENV}
+      CHUNK_SIZE_ENV: ${CHUNK_SIZE_ENV}
+      CHUNK_OVERLAP_ENV: ${CHUNK_OVERLAP_ENV}
+      LLM_EMBEDDING_DEFAULT_MODEL: ${LLM_EMBEDDING_DEFAULT_MODEL}
+      EMBED_LOCATION_ENV: ${EMBED_LOCATION_ENV}
+      VITE_SHOW_CHAT_INPUT: ${VITE_SHOW_CHAT_INPUT}
+      VECTOR_TOP_N: ${VECTOR_TOP_N}
+      AUTH_CHECK_ENABLED: "False" # False if a standalone service, True if used in BlocHub
+      EXTERNAL_LICENCE_SERVER: ${EXTERNAL_LICENCE_SERVER}
+      FRONTEND_SERVER: ${FRONTEND_SERVER}
+      BACKEND_SERVER: ${BACKEND_SERVER}
+      DOC_TYPES: ${DOC_TYPES}
+      GENERATE_FREEZE: ${GENERATE_FREEZE}
+      OPTIMISE_IMAGE_PDFS: ${OPTIMISE_IMAGE_PDFS}
+      PDF_OUTPUT_FOLDER: ${PDF_OUTPUT_FOLDER}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+    runtime: nvidia
+    volumes:
+      - ./MCP-Domain-XL:/app # Mounts the /API/ folder to /app in the container
+      - ./MCP-Domain-XL/temp:/app/temp # Share temp directory between image and system for debugging
+      - .:/repo   # TODO, backwards repo access is a bad idea, we shoul dcopy what we need explicitly.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        exec uvicorn app:app --host 0.0.0.0 --port 3000
+    depends_on:
+      - neo4j-db # Ensures Neo4j starts before the Python app
+      - mcps
     restart: unless-stopped

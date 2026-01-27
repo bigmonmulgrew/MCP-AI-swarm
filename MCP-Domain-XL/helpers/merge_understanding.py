@@ -22,7 +22,7 @@ def merge_corporate_understanding_graph(graph_json: dict):
     # enable dotenv variables
     dotenv.load_dotenv()
 
-    NEO4J_URI = os.getenv("NEO4J_URI")
+    NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j-db-container")
     NEO4J_USER = os.getenv("NEO4J_USER")
     NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 

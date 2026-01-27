@@ -9,7 +9,7 @@ DEFAULT_FILE_LOCATION = "."
 def slugify(text):
     """Convert text into a safe filename-friendly format."""
     return re.sub(r"[^a-zA-Z0-9_-]", "", text.replace(" ", "_")).lower()
-0000
+
 def save_file(contents, file_name, file_location=DEFAULT_FILE_LOCATION):
     """
     Saves contents to a file.

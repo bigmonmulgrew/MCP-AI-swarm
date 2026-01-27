@@ -7,11 +7,11 @@ FROM python:3.12-slim
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
-RUN apt-get update && apt-get upgrade
+RUN apt-get update
 
 # # TODO Putting this here for reference, pip does not report these installed in freeze so need to investigate if they are still in use
 # Install system dependencies for OCR + PDFs
-RUN apt-get install -y \
+RUN apt-get install -y --no-install-recommends \
     tesseract-ocr \
     poppler-utils \
     ghostscript \

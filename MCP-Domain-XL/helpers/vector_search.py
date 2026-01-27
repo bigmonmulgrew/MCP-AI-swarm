@@ -9,6 +9,7 @@ from helpers.embed_text import embed_text
 logging.basicConfig(level=logging.DEBUG)
 
 # Neo4j connection parameters
+# TODO this needs moving to a database connector, this is repeated endlessly.
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j-db-container")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")

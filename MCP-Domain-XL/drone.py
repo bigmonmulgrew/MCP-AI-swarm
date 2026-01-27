@@ -13,7 +13,7 @@ from helpers.chunk_text import chunk_text
 from helpers.embed_text import embed_text
 
 # environment settings
-NEO4J_URI = "bolt://neo4j-db-container"
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j-db-container")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 

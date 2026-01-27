@@ -1,4 +1,58 @@
-fastapi
-uvicorn[standard]
-requests
+##############################################################
+# LLM / LangChain stack
+##############################################################
+langchain==0.3.26             # Core langchain module
+langchain-community==0.3.26   # ✔ used (TextLoader, Neo4jGraph, Neo4jVector)
+langchain-core==0.3.66        
+langchain-experimental==0.3.4 # ✔ used (LLMGraphTransformer)
+langchain-ollama==0.3.3       # ✔ used (OllamaLLM)
+langchain-text-splitters==0.3.8
+
+##############################################################
+# Neo4j / GraphRAG
+##############################################################
+neo4j==5.28.1                # ✔ used (GraphDatabase driver)
+neo4j-graphrag==1.4.2        # ✘ imported but not used directly in app.py
+neo4j-graphrag[ollama]==1.4.2 # ✘ same as above
+
+##############################################################
+# Web server
+##############################################################
+uvicorn==0.34.3              # ✔ used to run FastAPI server
+fastapi==0.115.13            # ✔ core framework
+python-multipart==0.0.20     # ✔ required for file uploads
+starlette==0.46.2            # ❗ MISSING (FastAPI uses it internally)
+pydantic==2.11.7             # ❗ MISSING (BaseModel, Field)
+
+##############################################################
+# File handling / parsing
+##############################################################
+json_repair==0.30.3          # ✘ not imported in app.py
+python-docx==1.2.0           # ✘ not imported (may be used in helpers)
+markitdown[all]==0.0.2       # ✘ not imported
+docx                         # python-docx imported as docx
+markitdown==0.0.2            # required by process_document
+ocrmypdf==16.12.0            # required by process_document as a fallback
+
+##############################################################
+# API & HTTP clients
+##############################################################
+requests==2.32.4             # ✔ used for sync external calls
+httpx==0.28.1                # ✔ used for async licence server check
+
+##############################################################
+# OpenAI and Ollama
+##############################################################
+openai==1.91.0               # ✔ used (OpenAI client)
+Ollama==0.4.9                # ✘ UNNECESSARY (you use langchain_ollama instead)
+
+##############################################################
+# Utilities
+##############################################################
+uuid==1.30                  # ✘ unused
+shutils==0.1.0              # 
+python-dotenv==1.1.1        # ❗ MISSING (load_dotenv imported in app.py)
+
+
+eval_type_backport==0.2.2 
 rich

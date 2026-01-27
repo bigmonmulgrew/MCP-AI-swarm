@@ -8,7 +8,7 @@ from langchain_ollama import OllamaEmbeddings
 from openai import OpenAI
 
 # Configure logging to show debug messages
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 load_dotenv()
 # check env for embeddings location, local or remote API

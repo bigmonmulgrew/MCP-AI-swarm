@@ -6,7 +6,7 @@ from neo4j import GraphDatabase
 from helpers.embed_text import embed_text
 
 # Configure logging to show debug messages
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Neo4j connection parameters
 # TODO this needs moving to a database connector, this is repeated endlessly.

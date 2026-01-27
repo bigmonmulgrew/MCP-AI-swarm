@@ -10,6 +10,7 @@ ENDPOINT = os.getenv("BLOC_ENDPOINT", None)
 DATA_ID = os.getenv("BLOC_DATA_ID", None)
 
 last_query_time = None
+last_known_state = None
 
 class DataDrone(BaseDroneServer):
     def _register_subclass_endpoints(self):
@@ -17,7 +18,7 @@ class DataDrone(BaseDroneServer):
         async def handle_query(dqo: DroneQueryObject):
             print(f"Received query: {dqo.Query}")
 
-            global last_query_time
+            global last_query_time, last_known_state
             # Use global last_query_time to track the last time data was queried
             if not last_query_time:
                 last_query_time = datetime.now(timezone.utc) - timedelta(minutes=10)  # Default to last 10 minutes
@@ -62,14 +63,23 @@ class DataDrone(BaseDroneServer):
             
             cam_data = response.json()
             source = cam_data["source"]
-
+            last_known_state = source[-1] if source else last_known_state
             normalized_camera_data = [
                 # {"timestamp": ts, "cam1": c1, "cam2": c2}
                 # for ts, c1, c2 in CAM_DATA
                 {"timestamp": ts, "cam1": c1, "cam2": c2}
                 for ts, c1, c2 in source
             ]
+
             
+            if not source and last_known_state:
+                normalized_camera_data = [
+                # {"timestamp": ts, "cam1": c1, "cam2": c2}
+                # for ts, c1, c2 in CAM_DATA
+                {"timestamp": last_known_state[0], "cam1": last_known_state[1], "cam2": last_known_state[2]}
+                
+            ]
+
             payload = Message(
                 role = "bot"   ,                            # Message sender type
                 Msg = "Here is the camera data",           # The actual message  # {{I1}} token for image replacement example only, no defined format yet

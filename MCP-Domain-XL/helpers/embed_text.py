@@ -21,7 +21,7 @@ OpenAI.api_key = os.getenv("OPENAI_API_KEY", None)
 LLM_EMBEDDING_DEFAULT_MODEL = os.getenv(
     "LLM_EMBEDDING_MODEL", "tazarov/all-minilm-l6-v2-f32"
 )
-llm_base_url = "http://ollama_container:11434/"
+llm_base_url = "http://ollama-container:11434/"
 ollama_embed = OllamaEmbeddings(
     base_url=llm_base_url, model=LLM_EMBEDDING_DEFAULT_MODEL
 )

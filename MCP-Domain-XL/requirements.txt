@@ -56,3 +56,4 @@ python-dotenv==1.1.1        # ❗ MISSING (load_dotenv imported in app.py)
 
 eval_type_backport==0.2.2 
 rich
+utils

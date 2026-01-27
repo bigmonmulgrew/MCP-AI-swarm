@@ -188,13 +188,10 @@ services:
     container_name: mcp-domain-xl-container
     ports:
       - "${MCP_DOMAIN_XL_PORT_E:-8041}:${MCP_DOMAIN_XL_PORT_I:-8041}"
-    # Note loading env_file variables is not supported for docker-compose variables via GUI and will be internal only
-    env_file:  
-      - ./.env.emiz 
     environment:
       NEO4J_URI: "bolt://neo4j-db:${DATABASE_BOLT_PORT_I:-7687}" # Neo4j connection string
-      NEO4J_USER: ${NEO4J_USER}
-      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      NEO4J_USER: ${DATABASE_USERNAME}
+      NEO4J_PASSWORD: ${DATABASE_PASSWORD}
       CUDA_VISIBLE_DEVICES: "0"
       OPENAI_API_KEY: ${OPENAI_API_KEY}
       OPENAI_MODEL: ${OPENAI_MODEL}
@@ -224,12 +221,12 @@ services:
     volumes:
       - ./MCP-Domain-XL:/app # Mounts the /API/ folder to /app in the container
       - ./MCP-Domain-XL/temp:/app/temp # Share temp directory between image and system for debugging
-      - .:/repo   # TODO, backwards repo access is a bad idea, we shoul dcopy what we need explicitly.
+      - .:/repo   # TODO, backwards repo access is a bad idea, we should copy what we need explicitly.
     entrypoint:
       - sh
       - -c
       - |
-        exec uvicorn main:main --host 0.0.0.0 --port 3000
+        exec uvicorn main:app --host 0.0.0.0 --port 8041
     depends_on:
       - neo4j-db # Ensures Neo4j starts before the Python app
       - mcps

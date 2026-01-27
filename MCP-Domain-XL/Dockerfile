@@ -45,4 +45,4 @@ RUN pip install -r requirements.txt
 EXPOSE 8041
 
 # Run FastAPI with Uvicorn
-CMD ["uvicorn", "main:main", "--host", "0.0.0.0", "--port", "8041"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8041"]

@@ -40,6 +40,7 @@ MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
 MCP_VISUALISER_URL = os.getenv("MCP_VISUALISER_URL", "http://mcp-visualiser:8070")
 MCP_VERDICT_URL = os.getenv("MCP_VERDICT_URL", "http://mcp-verdict:8050")
 MCP_DOMAIN_URL = os.getenv("MCP_DOMAIN_URL", "http://mcp-domain:8040")
+MCP_DOMAIN_XL_URL = os.getenv("MCP_DOMAIN_URL", "http://mcp-domain-xl:8040")
 MCP_FILTER_URL = os.getenv("MCP_FILTER_URL", "http://mcp-filter:8030")
 
 @app.get("/")

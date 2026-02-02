@@ -1,6 +1,8 @@
 # environment variables
 # see sample.env for defaults
 .env
+.env*
+!sample.env*
 
 # Ignore virtual environment
 venv/
@@ -24,3 +26,5 @@ node_modules/
 frontend/node_modules/
 npm-debug.log
 /common/common.egg-info
+/neo4j-db
+/MCP-Domain-XL/batch

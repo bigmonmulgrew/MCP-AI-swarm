@@ -37,6 +37,30 @@ services:
       - ollama
     restart: unless-stopped
 
+  neo4j-db:
+    image: neo4j:latest
+    container_name: neo4j-db
+    ports:
+      - "${DATABASE_WEB_PORT_E:-7474}:${DATABASE_WEB_PORT_I:-7474}" # Neo4j browser web interface
+      - "${DATABASE_BOLT_PORT_E:-7687}:${DATABASE_BOLT_PORT_E:-7687}" # Bolt protocol for database connections
+    environment:
+      NEO4J_AUTH: "${DATABASE_USERNAME:-neo4j}/${DATABASE_PASSWORD:-TestPassword}" # Replace with your desired username/password
+      NEO4JLABS_PLUGINS: '["apoc","graph-data-science"]' # Add APOC plugin
+      NEO4J_dbms_security_procedures_unrestricted: "apoc.*, gds.*"
+      NEO4J_dbms_security_procedures_allowlist: "apoc.*, gds.*"
+      NEO4J_apoc_export_file_enabled: "true"
+      NEO4J_apoc_import_file_enabled: "true"
+      NEO4J_dbms_memory_pagecache_size: "2G"
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_dbms_connector_bolt_listen__address: "0.0.0.0:${DATABASE_BOLT_PORT_I:-7687}"
+      NEO4J_dbms_connector_http_listen__address: "0.0.0.0:${DATABASE_WEB_PORT_I:-7474}"
+    volumes:
+      - ./neo4j-db/data:/data # Data directory for database files
+      - ./neo4j-db/logs:/logs # Logs directory
+      - ./neo4j-db/import:/import # Directory for importing files
+      - ./neo4j-db/plugins:/plugins # Directory for plugins
+    restart: unless-stopped
+
   frontend:
     build:
       context: ./frontend
@@ -53,7 +77,6 @@ services:
     depends_on:
       - mcps
     restart: unless-stopped
-
   mcps:
     build:
       context: .
@@ -65,6 +88,8 @@ services:
       - OLLAMA_URL=http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
       - AI_QUEUE_URL=http://${AI_QUEUE_HOST:-ai-queue}:${AI_QUEUE_PORT_E:-9090}
       - MCP_DATA_URL=http://${MCP_DATA_HOST:-mcp-data}:${MCP_DATA_PORT_E:-8060}
+      - MCP_DOMAIN_URL=http://${MCP_DOMAIN_HOST:-mcp-data}:${MCP_DOMAIN_PORT_E:-8040}
+      - MCP_DOMAIN_XL_URL=http://${MCP_DOMAIN_XL_HOST:-mcp-data}:${MCP_DOMAIN_XL_PORT_E:-8041}
       - MCP_VISUALISER_URL=http://${MCP_VISUALISER_HOST:-mcp-data}:${MCP_VISUALISER_PORT_E:-8060}
       - MCP_VERDICT_URL=http://${MCP_VERDICT_HOST:-mcp-verdict}:${MCP_VERDICT_PORT_E:-8050}
     volumes:
@@ -72,7 +97,6 @@ services:
     depends_on:
       - aiqueue
     restart: unless-stopped
-
   mcp-visualiser:
     build:
       context: .
@@ -90,7 +114,6 @@ services:
     depends_on:
       - ollama
     restart: unless-stopped
-
   mcp-data:
     build:
       context: .
@@ -110,7 +133,6 @@ services:
     depends_on:
       - ollama
     restart: unless-stopped
-  
   mcp-verdict:
     build:
       context: .
@@ -161,4 +183,55 @@ services:
       - ./MCP-Filter:/app    # live code mounting for dev
     depends_on:
       - ollama
+    restart: unless-stopped
+  mcp-domain-xl:
+    image: api-service
+  # Implementation of the domain data drone that uses a neo4j Database to allow large amounts of domain data 
+    build:
+      context: .
+      dockerfile: ./MCP-Domain-XL/Dockerfile
+    container_name: mcp-domain-xl-container
+    ports:
+      - "${MCP_DOMAIN_XL_PORT_E:-8041}:${MCP_DOMAIN_XL_PORT_I:-8041}"
+    environment:
+      NEO4J_URI: "bolt://neo4j-db:${DATABASE_BOLT_PORT_I:-7687}" # Neo4j connection string
+      NEO4J_USER: ${DATABASE_USERNAME}
+      NEO4J_PASSWORD: ${DATABASE_PASSWORD}
+      CUDA_VISIBLE_DEVICES: "0"
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_MODEL: ${OPENAI_MODEL}
+      LLM_LOCATION_ENV: ${LLM_LOCATION_ENV}
+      CHUNK_SIZE_ENV: ${CHUNK_SIZE_ENV}
+      CHUNK_OVERLAP_ENV: ${CHUNK_OVERLAP_ENV}
+      LLM_EMBEDDING_DEFAULT_MODEL: ${LLM_EMBEDDING_DEFAULT_MODEL}
+      EMBED_LOCATION_ENV: ${EMBED_LOCATION_ENV}
+      VITE_SHOW_CHAT_INPUT: ${VITE_SHOW_CHAT_INPUT}
+      VECTOR_TOP_N: ${VECTOR_TOP_N}
+      AUTH_CHECK_ENABLED: "False" # False if a standalone service, True if used in BlocHub
+      EXTERNAL_LICENCE_SERVER: ${EXTERNAL_LICENCE_SERVER}
+      FRONTEND_SERVER: ${FRONTEND_SERVER}
+      BACKEND_SERVER: ${BACKEND_SERVER}
+      DOC_TYPES: ${DOC_TYPES}
+      OPTIMISE_IMAGE_PDFS: ${OPTIMISE_IMAGE_PDFS}
+      PDF_OUTPUT_FOLDER: ${PDF_OUTPUT_FOLDER}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+    runtime: nvidia
+    volumes:
+      - ./MCP-Domain-XL:/app # Mounts the /API/ folder to /app in the container
+      - ./MCP-Domain-XL/temp:/app/temp # Share temp directory between image and system for debugging
+      - .:/repo   # TODO, backwards repo access is a bad idea, we should copy what we need explicitly.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        exec uvicorn main:app --host 0.0.0.0 --port 8041
+    depends_on:
+      - neo4j-db # Ensures Neo4j starts before the Python app
+      - mcps
     restart: unless-stopped

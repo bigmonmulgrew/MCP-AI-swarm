@@ -52,7 +52,7 @@ class FilterDrone(BaseDroneServer):
             for item in dqo.MessageHistory["domain_drone_response"].structuredMsg[0]["timestamp"].values():
                 date_time = item.split("-")
                 dt = datetime(int(date_time[0]), int(date_time[1]), int(date_time[2]), tzinfo=timezone.utc)
-                epoch_time = dt.timestamp()
+                epoch_time = dt.timestamp() * 1000  # Convert to milliseconds
                 epoch_times.append(epoch_time)
 
 

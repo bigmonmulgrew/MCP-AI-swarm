@@ -1,9 +1,19 @@
 from datetime import datetime, timedelta, timezone
 import json
 import os
+import logging
+from common import setup_logging
 
 import requests
 from common import DroneQueryObject, BaseDroneServer, Message, BOOT_IMAGE, CAM_DATA, LOCAL_DATA
+
+LOG_LEVEL="INFO"    # Valid levels CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+
+logger = logging.getLogger(__name__)
+setup_logging(LOG_LEVEL)
+
+
+logger.info("Starting Data Drone")
 
 TOKEN = os.getenv("BLOC_TOKEN", None)
 ENDPOINT = os.getenv("BLOC_ENDPOINT", None)
@@ -48,6 +58,7 @@ class DataDrone(BaseDroneServer):
             
             try:
                 response = requests.request("POST", url, headers=headers, data=payload)
+                logging.info(f"Printing response {response.json()}")
             except Exception as error:
                 print(f"Error during request: {error}")
                 return Message(

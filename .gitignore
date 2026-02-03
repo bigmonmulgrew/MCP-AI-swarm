@@ -28,3 +28,4 @@ npm-debug.log
 /common/common.egg-info
 /neo4j-db
 /MCP-Domain-XL/batch
+harry.env

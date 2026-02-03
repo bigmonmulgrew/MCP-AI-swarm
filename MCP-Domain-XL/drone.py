@@ -170,6 +170,7 @@ class DomainDrone(BaseDroneServer):
             if json_response is None or 'result' not in json_response:
                 structured_data = []
             else:
+                logger.info(json_response)
                 structured_data = [parse_structured_msg([json_response['result']['response']])]
 
             payload = Message(

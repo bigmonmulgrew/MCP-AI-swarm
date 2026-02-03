@@ -214,6 +214,10 @@ services:
       DOC_TYPES: ${DOC_TYPES}
       OPTIMISE_IMAGE_PDFS: ${OPTIMISE_IMAGE_PDFS}
       PDF_OUTPUT_FOLDER: ${PDF_OUTPUT_FOLDER}
+      OLLAMA_URL: http://${OLLAMA_HOST:-ollama}:${OLLAMA_PORT_E:-11434}
+      MCPS_HOST: ${MCPS_HOST:-127.0.0.1}
+      MCPS_PORT: ${MCPS_PORT_I:-8080}
+      DOMAIN_MODEL: ${DOMAIN_MODEL:-"qwen3:1.7b"}
     deploy:
       resources:
         reservations:

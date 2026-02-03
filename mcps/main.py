@@ -320,11 +320,11 @@ def debug_verdict(data: UserQuery):
     ##################
     try:
         
-        #print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_URL}/query")
-        print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_XL_URL}/query")
+        print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_URL}/query")
+        #print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_XL_URL}/query")
 
-        #res_domain = requests.post(f"{MCP_DOMAIN_URL}/query", json=dqo.model_dump(mode = "json"))
-        res_domain = requests.post(f"{MCP_DOMAIN_XL_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_domain = requests.post(f"{MCP_DOMAIN_URL}/query", json=dqo.model_dump(mode = "json"))
+        #res_domain = requests.post(f"{MCP_DOMAIN_XL_URL}/query", json=dqo.model_dump(mode = "json"))
 
         res_domain.raise_for_status()
         domain_json = res_domain.json()

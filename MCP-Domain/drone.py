@@ -1,6 +1,13 @@
 import requests
+import logging
+from common import setup_logging
 from common import DroneQueryObject, BaseDroneServer, Message, parse_structured_msg
 import os
+
+LOG_LEVEL="INFO"    # Valid levels CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+
+logger = logging.getLogger(__name__)
+setup_logging(LOG_LEVEL)
 
 API_URL = "http://" + os.getenv("MCPS_HOST", "127.0.0.1") + ":" + os.getenv("MCPS_PORT", "8080") + "/ai-query"
 
@@ -57,6 +64,7 @@ class DomainDrone(BaseDroneServer):
                 Files=[],
                 Videos=[]
             )
+            logger.info(f"##### Printing final Domain payload #####\n{payload}")
             return payload
     
     # Add custom methods below

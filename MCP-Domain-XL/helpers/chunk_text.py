@@ -1,6 +1,14 @@
 import os
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+import logging
+from common import setup_logging
+
+LOG_LEVEL="INFO"    # Valid levels CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+
+logger = logging.getLogger(__name__)
+setup_logging(LOG_LEVEL)
+
 # Define .env variables
 CHUNK_SIZE_ENV = os.getenv("CHUNK_SIZE_ENV", 1500)
 CHUNK_OVERLAP_ENV = os.getenv("CHUNK_OVERLAP_ENV", 200)
@@ -18,6 +26,7 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, chunk_overlap: int = CHU
     :param chunk_overlap: The number of overlapping characters between chunks.
     :return: A list of chunked text segments.
     """
+    logger.info(f"Chunk Size: {CHUNK_SIZE} - Chunk Overlap: {CHUNK_OVERLAP}")
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size, chunk_overlap=chunk_overlap
     )

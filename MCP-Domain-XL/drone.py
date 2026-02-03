@@ -3,6 +3,7 @@ import os
 import requests
 import asyncio
 import logging
+from common import setup_logging
 
 import numpy as np
 
@@ -15,6 +16,10 @@ from helpers.chunk_text import chunk_text
 from helpers.embed_text import embed_text
 from helpers.vector_search import vector_search
 
+LOG_LEVEL="INFO"    # Valid levels CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+
+logger = logging.getLogger(__name__)
+setup_logging(LOG_LEVEL)
 # environment settings
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j-db-container")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
@@ -64,12 +69,12 @@ class DomainDrone(BaseDroneServer):
             ]
             
             domain_data = neo4j_response
-            logging.info(f"######################")
-            logging.info(f"######################")
-            logging.info(f"######################")
-            logging.info(f"######################")
-            logging.info(f"######################")
-            logging.info(f"Printing Domain data: {domain_data}")
+            logger.info(f"######################")
+            logger.info(f"######################")
+            logger.info(f"######################")
+            logger.info(f"######################")
+            logger.info(f"######################")
+            logger.info(f"Printing Domain data: {domain_data}")
             
             ai_payload = {
                 # TODO leaving this here for reference while debugging, this can be removed
@@ -175,6 +180,8 @@ class DomainDrone(BaseDroneServer):
                 Files=[],
                 Videos=[]
             )
+
+            logger.info(f"##### Printing final Domain payload #####\n{payload}")
             return payload
     
         # upload document, process and transform to knowledge graph data
@@ -262,11 +269,10 @@ class DomainDrone(BaseDroneServer):
                 }
 
             except Exception as e:
-                logging.error(f"Error processing PDF: {e}")
+                logger.error(f"Error processing PDF: {e}")
                 raise HTTPException(
                     status_code=500, detail=f"Internal error during processing: {e}"
                 )
-
 
         @self.app.get("/batch")
         async def process_batch():
@@ -318,7 +324,7 @@ class DomainDrone(BaseDroneServer):
                         await asyncio.sleep(0.5)
 
                     except Exception as e:
-                        logging.error(f"Error processing file {filename}: {e}")
+                        logger.error(f"Error processing file {filename}: {e}")
                         yield f'data: {{"file": "{filename}", "status": "failed: {str(e)}", "progress": "{idx} of {total_files}"}}\n\n'
 
                 yield f'data: {{"message": "Batch processing completed."}}\n\n'
@@ -333,7 +339,7 @@ class DomainDrone(BaseDroneServer):
             try:
                 results = vector_search(user_query, top_n=5)
             except Exception as e:
-                logging.error(f"Vector search failed: {e}")
+                logger.error(f"Vector search failed: {e}")
                 results = []
 
             # Embed the user query once

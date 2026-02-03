@@ -20,6 +20,8 @@ app = FastAPI(title="Multi Cotext Protocol Server API is runnning")
 
 LOG_LEVEL="INFO"    # Valid levels CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 
+FORCE_VERBOSE_VERDICT_DEBUG = True
+
 logger = logging.getLogger(__name__)
 setup_logging(LOG_LEVEL)
 
@@ -40,7 +42,7 @@ MCP_DATA_URL = os.getenv("MCP_DATA_URL", "http://mcp-data:8060")
 MCP_VISUALISER_URL = os.getenv("MCP_VISUALISER_URL", "http://mcp-visualiser:8070")
 MCP_VERDICT_URL = os.getenv("MCP_VERDICT_URL", "http://mcp-verdict:8050")
 MCP_DOMAIN_URL = os.getenv("MCP_DOMAIN_URL", "http://mcp-domain:8040")
-MCP_DOMAIN_XL_URL = os.getenv("MCP_DOMAIN_URL", "http://mcp-domain-xl:8040")
+MCP_DOMAIN_XL_URL = os.getenv("MCP_DOMAIN_XL_URL", "http://mcp-domain-xl:8041")
 MCP_FILTER_URL = os.getenv("MCP_FILTER_URL", "http://mcp-filter:8030")
 
 @app.get("/")
@@ -270,6 +272,27 @@ def process_user_query_stack(data: UserQuery):
 @app.post("/debug-verdict")
 def debug_verdict(data: UserQuery):
     """Debug endpoint to simulate verdict processing."""
+
+    logging.info(data.model_dump_json())
+
+    data_model_dump = data.model_dump()
+
+    data_json = None
+    domain_json = None
+    filter_json = None
+    verdict_json = None
+
+    if "verbose" not in data_model_dump:
+        verbose = False
+    else:
+        verbose = data_model_dump["verbose"]
+        if not isinstance(verbose, bool):
+            logger.error("Invalid verbose value received; defaulting to True")
+            verbose = True
+
+    # Force verbose based on debug setting above
+    verbose = verbose or FORCE_VERBOSE_VERDICT_DEBUG
+
     dqo = DroneQueryObject(
         Query=data.query,
         RecursionDepth=1,
@@ -296,8 +319,13 @@ def debug_verdict(data: UserQuery):
 
     ##################
     try:
-        print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_URL}/query")
-        res_domain = requests.post(f"{MCP_DOMAIN_URL}/query", json=dqo.model_dump(mode = "json"))
+        
+        #print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_URL}/query")
+        print(f"[MCPS] Calling Domain MCP: {MCP_DOMAIN_XL_URL}/query")
+
+        #res_domain = requests.post(f"{MCP_DOMAIN_URL}/query", json=dqo.model_dump(mode = "json"))
+        res_domain = requests.post(f"{MCP_DOMAIN_XL_URL}/query", json=dqo.model_dump(mode = "json"))
+
         res_domain.raise_for_status()
         domain_json = res_domain.json()
 
@@ -331,6 +359,16 @@ def debug_verdict(data: UserQuery):
             "timestamp": datetime.now(timezone.utc).timestamp() * 1000,
             "verdict": dqo.MessageHistory["verdict_drone_response"]["structuredMsg"]["verdict"]
         }
+
+        if verbose:
+            debug_data = {
+                "domain_debug": domain_json,
+                "filter_debug": filter_json,
+                "camera_debug": data_json,
+                "verdict_debug": verdict_json
+            }
+            blocject["debug_data"] = debug_data
+
         logger.info(f"[MCPS] Verdict blocject: {dqo.MessageHistory['verdict_drone_response']['structuredMsg']}")
         return blocject
     except requests.exceptions.RequestException as e:
